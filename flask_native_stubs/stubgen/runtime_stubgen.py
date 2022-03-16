@@ -2,7 +2,9 @@
 collect runtime info, generate stub files.
 usage: `~/docs/how-to-generate-python-stub-files-(pyi).zh.md`.
 """
+import os
 from collections import defaultdict
+from textwrap import dedent
 
 from .. import global_controls as gc
 
@@ -32,8 +34,6 @@ def generate_stub_files(dir_o: str) -> None:
     if gc.COLLECT_RUNTIME_INFO is False:
         raise Exception('Runtime info collection is not enabled!')
     
-    from textwrap import dedent
-    
     io_map = _create_empty_dirs(dir_o, add_init_file=True)
     
     for file, v0 in runtime_info_collection['files'].items():
@@ -52,7 +52,7 @@ def generate_stub_files(dir_o: str) -> None:
                     *(f'{x}: {y} = {z}' for x, y, z in v1['kwargs']),
                     *(('**kwargs',) if v1['has_**kwargs'] else ()),
                 )),
-                v1['return'] or 'None',
+                v1['return'],
             ))
         
         with open(file_o, 'w', encoding='utf-8') as f:
@@ -74,8 +74,6 @@ def generate_stub_files(dir_o: str) -> None:
 
 
 def _create_empty_dirs(dir_o: str, add_init_file: bool) -> dict:
-    import os
-    
     root_dir_i = runtime_info_collection['root_path']
     root_dir_o = dir_o
     
