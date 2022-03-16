@@ -1,2 +1,0 @@
-host = None
-port = None

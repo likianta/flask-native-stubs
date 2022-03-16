@@ -1,107 +1,94 @@
 import json
+import pickle
 import sys
 from functools import wraps
+from traceback import format_exc
 
 from flask import Response
 from flask import request
 from requests import get
 
-from . import intermediate
+from . import global_controls as gc
+from .general import get_function_info
 
 
-class ContentType:
+class CONNECTION:
+    HOST: str = None
+    PORT: int = None
+
+
+class CONTENT_TYPE:  # noqa
     BASIC = 'application/python-basic'
-    TEXT = 'text/html'
-    OBJECT = 'application/python-object'
     ERROR = 'application/python-error'
+    OBJECT = 'application/python-object'
+    TEXT = 'text/html'
 
 
 def delegate_params(func):
-    # warning:
-    #   1. `func:params` mustn't include `*args` or `**kwargs`.
-    #   2. if one from `func:params` is not str type, it must be explicitly
-    #      annotated.
-    #   3. this doesn't support complex types, it supports only:
-    #      bool, float, int, str.
-    #   4. if `func` has default args, the default args must be annotated
-    #      correctly. for example:
-    #           def some_func(a, b, c: bool = None):
-    #               #               ^^^^^^^^^^^^^^
-    #               #   param `c` must be annotated correctly (ps: if its type
-    #               #   is str, you can leave it out), otherwise we will
-    #               #   recognize it as str type.
-    #               ...
+    info = get_function_info(func)
     
-    param_count = func.__code__.co_argcount
-    param_names = func.__code__.co_varnames[:param_count]
-    annotations = func.__annotations__
-    del param_count
-    
-    # collect func's parameters.
-    preset_params = {}  # dict[str param, str annotated_type]
-    for param in param_names:
-        preset_params[param] = annotations.get(param, str)
-    del param_names
-    del annotations
-    
+    @wraps(func)
     def delegate(*args, **kwargs):
-        if not preset_params:
-            # assert not args and not kwargs
+        if not any((
+                info['args'], info['kwargs'],
+                info['has_*args'], info['has_**kwargs']
+        )):
             return func()
-        elif args or kwargs:
+        
+        if args or kwargs:
             return func(*args, **kwargs)
+        
         else:
-            real_args = {}
-            for param, type_ in preset_params.items():
-                if param in request.args:
-                    if type_ is bool:
-                        real_args[param] = bool(eval(request.args[param]))
-                        #   FIXME: `eval` operation is dangerous!
-                    else:
-                        real_args[param] = type_(request.args[param])
-            return func(**real_args)
+            # args is () and kwargs is {}, we should gain the real params from
+            #   flask `request`.
+            serialized_data: str = request.args['data']
+            if gc.SERIALIZATION == 'json':
+                params = json.loads(serialized_data)
+            elif gc.SERIALIZATION == 'pickle':
+                # FIXME: `pickle` is not safe.
+                params = pickle.loads(serialized_data.encode('utf-8'))
+            else:
+                # TODO: custom deserializer, for example, encrypted data.
+                raise Exception(f'Unknown deserializer: {gc.SERIALIZATION}')
+            return func(**params)
     
     return delegate
 
 
 def delegate_return(func):
-    """
-    notes:
-        all exceptions are catched and wrapped with `Response`, they will not
-        be raised in server side, but outburst in client side.
-    """
-    
     @wraps(func)
     def delegate(*args, **kwargs):
         try:
             result = func(*args, **kwargs)
-        except Exception:
-            from traceback import format_exc
+        except Exception as e:
+            if gc.THROW_EXCEPTIONS_TO_CLIENT_SIDE is False:
+                # return Response(mimetype=CONTENT_TYPE.ERROR)
+                raise e
             result = json.dumps({
-                'filename'  : func.__code__.co_filename,
-                'lineno'    : func.__code__.co_firstlineno,
-                'funcname'  : func.__name__,
-                'error_info': format_exc()
+                'filename': func.__code__.co_filename,
+                'lineno'  : func.__code__.co_firstlineno,
+                'funcname': func.__name__,
+                'error'   : format_exc()
             })
-            mimetype = ContentType.ERROR
+            mimetype = CONTENT_TYPE.ERROR
         else:
             if isinstance(result, str):
-                mimetype = ContentType.TEXT
+                mimetype = CONTENT_TYPE.TEXT
             elif result is None or type(result) in (bool, int, float):
                 result = str(result)
-                mimetype = ContentType.BASIC
+                mimetype = CONTENT_TYPE.BASIC
             else:
                 try:
                     result = json.dumps(result)
                 except Exception as e:
-                    print('You are returning a non-serializable object!', {
+                    print('You cannot return un-serializable object!', {
                         'filename': func.__code__.co_filename,
                         'lineno'  : func.__code__.co_firstlineno,
                         'funcname': func.__name__,
                     })
                     raise e
                 # # result = json.dumps(result, default=str)
-                mimetype = ContentType.OBJECT
+                mimetype = CONTENT_TYPE.OBJECT
         return Response(result, mimetype=mimetype)
     
     return delegate
@@ -111,17 +98,22 @@ def delegate_call(path: str, arg_names: tuple):
     def delegate(*args, **kwargs):
         for name, arg in zip(arg_names, args):
             kwargs[name] = arg
-        from lk_logger import lk
-        lk.loga(kwargs)
+        # print(kwargs)
         
-        if intermediate.host is None:
-            print('[flask_native_stubs] You forgot to call '
+        if CONNECTION.HOST is None:
+            print('[flask_native_stubs] You forgot calling '
                   '`flask_native_stubs.setup(...)` at the startup!')
             sys.exit(1)
         else:
-            url = f'http://{intermediate.host}:{intermediate.port}/{path}'
+            url = f'http://{CONNECTION.HOST}:{CONNECTION.PORT}/{path}'
         
-        resp = get(url, params=kwargs)  # FIXME
+        if gc.SERIALIZATION == 'json':
+            resp = get(url, params={'data': json.dumps(kwargs)})
+        elif gc.SERIALIZATION == 'pickle':
+            resp = get(url, params={'data': pickle.dumps(kwargs)})
+        else:
+            raise Exception(f'Unknown serializer: {gc.SERIALIZATION}')
+        
         data = resp.content  # type: bytes
         content_type = resp.headers['Content-Type'].split(';')[0]
         #   `~.split(';')[0]`: e.g. 'text/html; charset=utf-8' -> 'text/html'
@@ -129,26 +121,26 @@ def delegate_call(path: str, arg_names: tuple):
         if resp.status_code >= 400:
             raise Exception(f'HTTP status code error: {resp.status_code}', data)
         
-        if content_type == ContentType.TEXT:
+        if content_type == CONTENT_TYPE.TEXT:
             return data.decode('utf-8').strip()
-        elif content_type == ContentType.BASIC:
+        elif content_type == CONTENT_TYPE.BASIC:
             return eval(data)
-        elif content_type == ContentType.OBJECT:
+        elif content_type == CONTENT_TYPE.OBJECT:
             return json.loads(data)
-        elif content_type == ContentType.ERROR:
+        elif content_type == CONTENT_TYPE.ERROR:
             from textwrap import dedent
             error_info = json.loads(data)
             raise Exception(dedent('''
-                APXF Error:
+                Error occurred in the remote server:
                     Unexpected error happend at {}:{} >> {}
                     Error info: {}
             ''').format(
                 error_info['filename'],
                 error_info['lineno'],
                 error_info['funcname'],
-                error_info['error_info'],
+                error_info['error'],
             ).strip())
         else:
-            raise ValueError('Invalid content type: ' + content_type, url)
+            raise Exception('Invalid content type: ' + content_type, url)
     
     return delegate
