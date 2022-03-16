@@ -7,7 +7,7 @@ from .delegates import delegate_call
 from .delegates import delegate_params
 from .delegates import delegate_return
 
-app = Flask('flask_native_call')
+app = Flask('flask_native_stubs')
 
 
 def add_route(func, path: str = None):

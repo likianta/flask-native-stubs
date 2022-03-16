@@ -1,4 +1,4 @@
-# Flask Native Call | Flask 原函数调用
+# Flask Native Stubs | Flask 原函数调用
 
 像调用普通函数一样调用被 flask 装饰过的函数.
 
@@ -20,10 +20,10 @@ def hello_world(a: int, b: str, c: float) -> bool:
     print(a)
     print(b)
     print(c)
-    return True
+    return [a, b, c]
 
 if __name__ == '__main__':
-    app.run()
+    app.run('localhost', 8080)
 ```
 
 client.py
@@ -31,7 +31,7 @@ client.py
 ```python
 from server import hello_world
 response = hello_world(123, '456', 7.89)
-#   它相当于 requests.get('localhost:8080/hello-world', {...}) 的高级封装.
+#   它相当于 requests.get('http://localhost:8080/hello-world', {...}) 的高级封装.
 print(response)  # -> [123, '456', 7.89]
 ```
 
@@ -41,6 +41,10 @@ print(response)  # -> [123, '456', 7.89]
 2. 代理发起请求
 3. 代理返回结果
 4. 调用者可以充分利用 IDE 的 "静态分析" 优势
+
+## 实现原理
+
+*TODO*
 
 ## 注意事项
 

@@ -115,8 +115,8 @@ def delegate_call(path: str, arg_names: tuple):
         lk.loga(kwargs)
         
         if intermediate.host is None:
-            print('[flask_native_call] You forgot to call '
-                  '`flask_native_call.setup(...)` at the startup!')
+            print('[flask_native_stubs] You forgot to call '
+                  '`flask_native_stubs.setup(...)` at the startup!')
             sys.exit(1)
         else:
             url = f'http://{intermediate.host}:{intermediate.port}/{path}'

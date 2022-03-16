@@ -1,4 +1,4 @@
-# Flask Native Call
+# Flask Native Stubs
 
 - [中文版](README.zh.md)
 
@@ -15,7 +15,7 @@ demo
 server.py
 
 ```python
-from flask_native_call import app, auto_route
+from flask_native_stubs import app, auto_route
 
 @auto_route()
 def hello_world(a: int, b: str, c: float) -> bool:
@@ -25,18 +25,18 @@ def hello_world(a: int, b: str, c: float) -> bool:
     return [a, b, c]
 
 if __name__ == '__main__':
-    app.run('localhost', 5000)
+    app.run('localhost', 8080)
 ```
 
 client.py
 
 ```python
 from server import hello_world
-from flask_native_call import setup
+from flask_native_stubs import setup
 setup('localhost', 5000)  # match server address
 response = hello_world(123, '456', 7.89)
 #   internally, it works the same like:
-#       `requests.get('localhost:8080/hello-world', {...})`
+#       `requests.get('http://localhost:8080/hello-world', {...})`
 print(response)  # -> [123, '456', 7.89]
 ```
 
