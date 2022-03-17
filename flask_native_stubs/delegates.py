@@ -7,21 +7,20 @@ from traceback import format_exc
 import urllib3
 from flask import Response
 from flask import request
-from requests import Session
-from requests import get
+from requests import Session as _Session
 
 from . import global_controls as gc
 from .general import get_function_info
 
 
-class Request:
+class Session:
     
     def __init__(self):
         self.host = None
         self.port = None
         self.protocol = 'http'
-        self._session = Session()
-
+        self._session = _Session()
+    
     def add_cert(self, cert_file: str, disable_warnings=True):
         """
         disable_warnings:
@@ -36,13 +35,17 @@ class Request:
         self._session.verify = cert_file
         if disable_warnings:
             urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
-
+    
+    def get(self, path: str, params: dict = None):
+        return self._session.get(f'{self.url}/{path}', params=params)
+    
     @property
     def url(self) -> str:
+        # assert self.host is not None
         return f'{self.protocol}://{self.host}:{self.port}'
 
 
-req = Request()
+session = Session()
 
 
 class CONTENT_TYPE:  # noqa
@@ -125,19 +128,17 @@ def delegate_return(func):
 
 def delegate_call(path: str):
     def delegate(*args, **kwargs):
-        if req.host is None:
+        if session.host is None:
             print('[flask_native_stubs] You forgot calling '
                   '`flask_native_stubs.setup(...)` at the startup!')
             sys.exit(1)
-        else:
-            url = f'{req.url}/{path}'
         
         if gc.SERIALIZATION == 'json':
-            resp = get(url, params={'data': json.dumps({
+            resp = session.get(path, params={'data': json.dumps({
                 'args': args, 'kwargs': kwargs
             })})
         elif gc.SERIALIZATION == 'pickle':
-            resp = get(url, params={'data': pickle.dumps({
+            resp = session.get(path, params={'data': pickle.dumps({
                 'args': args, 'kwargs': kwargs
             })})
         else:
@@ -170,6 +171,7 @@ def delegate_call(path: str):
                 error_info['error'],
             ).strip())
         else:
-            raise Exception('Invalid content type: ' + content_type, url)
+            raise Exception('Invalid content type: ' + content_type,
+                            f'{session.url}/{path}')
     
     return delegate

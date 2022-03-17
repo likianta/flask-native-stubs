@@ -2,17 +2,17 @@ from functools import wraps
 from inspect import currentframe
 
 from .delegates import delegate_call
-from .delegates import req
+from .delegates import session
 
 
 def setup(host: str, port: int, protocol='http', cert_file: str = ''):
-    req.host = host
-    req.port = port
-    req.protocol = protocol
+    session.host = host
+    session.port = port
+    session.protocol = protocol
     if cert_file:
         # warning: if cer_file is given, the protocol will be forcely changed
         #   to 'https'.
-        req.add_cert(cert_file)
+        session.add_cert(cert_file)
 
 
 def add_route(func, path: str = None):
