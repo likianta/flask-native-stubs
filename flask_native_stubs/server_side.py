@@ -17,9 +17,14 @@ def auto_route(path=None):
         if path is None:
             path = func.__name__.replace('_', '-')
         
-        delegate_func = delegate_params(func)
-        delegate_func = delegate_return(delegate_func)
-        app.add_url_rule('/' + path, None, delegate_func)
+        if gc.SIMULATION_MODE:
+            # for safety consideration, `app.add_url_rule` won't work in
+            # simulation mode.
+            pass
+        else:
+            delegate_func = delegate_params(func)
+            delegate_func = delegate_return(delegate_func)
+            app.add_url_rule('/' + path, None, delegate_func)
         
         if gc.COLLECT_RUNTIME_INFO:
             file_path = os.path.normpath(func.__code__.co_filename)
