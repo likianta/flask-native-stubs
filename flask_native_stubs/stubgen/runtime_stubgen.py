@@ -90,6 +90,13 @@ def generate_stub_files(dir_o: str, flat_dir=False) -> None:
                 function_names=', '.join(function_names),
             ))
         print(f'file generated: {file_o}')
+    
+    # reset, to be reusable.
+    runtime_info_collection.clear()
+    runtime_info_collection.update({
+        'root_path': '',
+        'files': defaultdict(dict)
+    })
 
 
 def _create_empty_dirs(dir_o: str, add_init_file: bool) -> dict:
@@ -101,7 +108,9 @@ def _create_empty_dirs(dir_o: str, add_init_file: bool) -> dict:
         for x in runtime_info_collection['files']
     )
     common_prefix_i = os.path.commonpath(tuple(dirs_i)).rstrip('/')
-    assert common_prefix_i.startswith(root_dir_i)
+    if not common_prefix_i.startswith(root_dir_i):
+        print(root_dir_i, root_dir_o, dirs_i, common_prefix_i)
+        raise Exception('Some indexed file(s) is/are outside of root dir!')
     
     dirs_o = ('{}/{}'.format(
         root_dir_o, x[len(common_prefix_i):].lstrip('/')
@@ -111,8 +120,6 @@ def _create_empty_dirs(dir_o: str, add_init_file: bool) -> dict:
         common_prefix_i[len(root_dir_i):].lstrip('/')
     )
     os.makedirs(common_prefix_o, exist_ok=True)
-    
-    # print(root_dir_i, root_dir_o, dirs_i, common_prefix_i)
     
     for d in sorted(dirs_o):
         print(d)
