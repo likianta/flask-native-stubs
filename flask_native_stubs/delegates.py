@@ -2,6 +2,7 @@ import json
 import pickle
 import sys
 from functools import wraps
+from textwrap import dedent
 from traceback import format_exc
 
 import urllib3
@@ -93,14 +94,15 @@ def delegate_return(func):
         try:
             result = func(*args, **kwargs)
         except Exception as e:
-            if gc.THROW_EXCEPTIONS_TO_CLIENT_SIDE is False:
-                # return Response(mimetype=CONTENT_TYPE.ERROR)
-                raise e
+            if gc.TRACEBACK_DETAILED_EXCEPTIONS:
+                error_msg = format_exc()
+            else:
+                error_msg = str(e)
             result = json.dumps({
                 'filename': func.__code__.co_filename,
                 'lineno'  : func.__code__.co_firstlineno,
                 'funcname': func.__name__,
-                'error'   : format_exc()
+                'error'   : error_msg,
             })
             mimetype = CONTENT_TYPE.ERROR
         else:
@@ -158,18 +160,21 @@ def delegate_call(path: str):
         elif content_type == CONTENT_TYPE.OBJECT:
             return json.loads(data)
         elif content_type == CONTENT_TYPE.ERROR:
-            from textwrap import dedent
             error_info = json.loads(data)
-            raise Exception(dedent('''
-                Error occurred in the remote server:
-                    Unexpected error happend at {}:{} >> {}
-                    Error info: {}
-            ''').format(
-                error_info['filename'],
-                error_info['lineno'],
-                error_info['funcname'],
-                error_info['error'],
-            ).strip())
+            if gc.TRACEBACK_DETAILED_EXCEPTIONS:
+                raise Exception(dedent('''
+                    Error occurred in the remote server:
+                        Unexpected error happend at {}:{} >> {}
+                        Error info: {}
+                ''').format(
+                    error_info['filename'],
+                    error_info['lineno'],
+                    error_info['funcname'],
+                    error_info['error'],
+                ).strip())
+            else:
+                print(f'[RemoteError] {error_info["error"]}')
+                sys.exit(1)
         else:
             raise Exception('Invalid content type: ' + content_type,
                             f'{session.url}/{path}')

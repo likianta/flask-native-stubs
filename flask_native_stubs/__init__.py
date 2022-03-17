@@ -6,4 +6,4 @@ from .server_side import auto_route
 from .stubgen import enable_stubgen
 from .stubgen import generate_stub_files
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
