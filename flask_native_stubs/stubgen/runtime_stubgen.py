@@ -32,7 +32,8 @@ runtime_info_collection = {
 
 
 def generate_stub_files(
-        dir_o: str, io_map: Union[str, dict] = 'tree_map'
+        dir_o: str, io_map: Union[str, dict] = 'tree_map',
+        add_init_files=True
 ) -> bool:
     if gc.COLLECT_RUNTIME_INFO is False:
         raise Exception('Runtime info collection is not enabled! '
@@ -41,6 +42,8 @@ def generate_stub_files(
     if not runtime_info_collection['files']:
         _reset_runtime_info_collection()
         return False
+    
+    dir_o = os.path.abspath(dir_o)
     
     # print(runtime_info_collection)
     
@@ -93,6 +96,9 @@ def generate_stub_files(
             ))
         print(f'file generated: {file_o}')
     
+    if add_init_files:
+        _add_init_files(dir_o)
+    
     _reset_runtime_info_collection()
     return True
 
@@ -108,7 +114,7 @@ def _reset_runtime_info_collection():
 # -----------------------------------------------------------------------------
 
 def _gen_tree_map(dir_o: str) -> dict:
-    return _create_empty_dirs(dir_o, add_init_file=False)
+    return _create_empty_dirs(dir_o)
 
 
 def _gen_flat_map(dir_o: str) -> dict:
@@ -161,7 +167,7 @@ def _normalize_io_map(raw_io_map: dict) -> dict:
 
 # -----------------------------------------------------------------------------
 
-def _create_empty_dirs(dir_o: str, add_init_file: bool) -> dict:
+def _create_empty_dirs(dir_o: str) -> dict:
     root_dir_i = runtime_info_collection['root_path'].replace('\\', '/')
     root_dir_o = dir_o.replace('\\', '/')
     
@@ -186,9 +192,6 @@ def _create_empty_dirs(dir_o: str, add_init_file: bool) -> dict:
     for d in sorted(dirs_o):
         print(d)
         os.makedirs(d, exist_ok=True)
-        if add_init_file:
-            with open(f'{d}/__init__.py', 'w', encoding='utf-8') as f:
-                f.write('')
     
     io_map = {}  # {str_file_i: str_file_o, ...}
     for file_i in runtime_info_collection['files']:
@@ -198,3 +201,20 @@ def _create_empty_dirs(dir_o: str, add_init_file: bool) -> dict:
         )
         io_map[file_i] = file_o
     return io_map
+
+
+# -----------------------------------------------------------------------------
+
+def _add_init_files(dir_o: str):
+    for root, dirs, files in os.walk(dir_o):
+        # print(root, dirs, files)
+        if root.startswith(('__', '.')):
+            continue
+        modules = (x[:-3] for x in files
+                   if x.endswith('.py')
+                   and not x.startswith(('__', '.')))
+        print('Add __init__.py', f'{root}/__init__.py')
+        with open(f'{root}/__init__.py', 'w', encoding='utf-8') as f:
+            f.write('\n'.join((
+                'from . import {}'.format(x) for x in modules
+            )))
