@@ -20,8 +20,8 @@ runtime_info_collection = {
                     # see `../general.py`
                     'args': ...,
                     'kwargs': ...,
-                    'has_*args': ...,
-                    'has_**kwargs': ...,
+                    'has_*args': ...,  # v0.1.0 doesn't support
+                    'has_**kwargs': ...,  # v0.1.0 doesn't support
                     'return': ...,
                 }, ...
             }, ...
@@ -48,9 +48,9 @@ def generate_stub_files(dir_o: str) -> None:
                 func_name,
                 ', '.join((
                     *(f'{x}: {y}' for x, y in v1['args']),
-                    *(('*args',) if v1['has_*args'] else ()),
+                    # *(('*args',) if v1['has_*args'] else ()),
                     *(f'{x}: {y} = {z}' for x, y, z in v1['kwargs']),
-                    *(('**kwargs',) if v1['has_**kwargs'] else ()),
+                    # *(('**kwargs',) if v1['has_**kwargs'] else ()),
                 )),
                 v1['return'],
             ))
@@ -58,14 +58,16 @@ def generate_stub_files(dir_o: str) -> None:
         with open(file_o, 'w', encoding='utf-8') as f:
             f.write(dedent('''
                 """
-                Auto-generated stub file.
+                Auto-generated stub file by [flask-native-stubs][1].
+                
+                [1]: https://github.com/likianta/flask-native-stubs
                 """
                 from flask_native_stubs import add_route
                 from typing import Any
                 
                 {functions}
                 
-                [add_route(x) for x in ({function_names})]
+                [add_route(x) for x in ({function_names},)]
             ''').lstrip().format(
                 functions='\n\n'.join(function_defs),
                 function_names=', '.join(function_names),

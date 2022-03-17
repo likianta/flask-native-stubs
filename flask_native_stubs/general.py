@@ -6,8 +6,8 @@ def get_function_info(func) -> dict:
             'args': ((str arg_name, str arg_type), ...),
                                     ^ [1]
             'kwargs': ((str arg_name, str arg_type, any value), ...),
-            'has_*args': bool,
-            'has_**kwargs': bool,
+            'has_*args': bool,  # [3]
+            'has_**kwargs': bool,  # [4]
             'return': str return_type,
                       ^ [2]
         }
@@ -18,6 +18,7 @@ def get_function_info(func) -> dict:
         [2]: there is no empty return type.
              for a callback case, it uses 'None';
              for an unknown type, it uses 'Any'.
+        [3][4]: v0.1.0 doesn't support.
     
     relevant:
         ./stubgen/runtime_stubgen.py
@@ -65,5 +66,7 @@ def get_function_info(func) -> dict:
         'name'  : func_name,
         'args'  : args,
         'kwargs': kwargs,
+        # 'has_*args'  : False,
+        # 'has_**kwargs': False,
         'return': return_,
     }
