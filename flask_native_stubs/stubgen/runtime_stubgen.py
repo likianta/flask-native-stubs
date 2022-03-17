@@ -30,15 +30,28 @@ runtime_info_collection = {
 '''
 
 
-def generate_stub_files(dir_o: str) -> None:
+def generate_stub_files(dir_o: str, flat_dir=False) -> None:
     if gc.COLLECT_RUNTIME_INFO is False:
-        raise Exception('Runtime info collection is not enabled!')
+        raise Exception('Runtime info collection is not enabled! '
+                        'Did you forget to call `flask_native_stubs'
+                        '.enable_stubgen()`?')
     if not runtime_info_collection['files']:
         raise Exception('No decorated functions collected!')
     
     # print(runtime_info_collection)
     
-    io_map = _create_empty_dirs(dir_o, add_init_file=True)
+    if flat_dir:
+        os.makedirs(dir_o, exist_ok=True)
+        all_file_paths = tuple(runtime_info_collection['files'])
+        all_file_names = tuple(map(os.path.basename, all_file_paths))
+        assert len(all_file_names) == len(set(all_file_names)), (
+            'Cannot apply `flat_dir` feature: there are duplicate file names!'
+        )
+        io_map = {fp: f'{dir_o}/{fn}' for fp, fn in zip(
+            all_file_paths, all_file_names
+        )}
+    else:
+        io_map = _create_empty_dirs(dir_o, add_init_file=False)
     
     for file, v0 in runtime_info_collection['files'].items():
         file_i = file
@@ -83,23 +96,36 @@ def _create_empty_dirs(dir_o: str, add_init_file: bool) -> dict:
     root_dir_i = runtime_info_collection['root_path'].replace('\\', '/')
     root_dir_o = dir_o.replace('\\', '/')
     
-    dirs_i = set(os.path.dirname(x) for x in runtime_info_collection['files'])
-    common_prefix = os.path.commonprefix(tuple(dirs_i)).rstrip('/')
-    # print(root_dir_i, root_dir_o, dirs_i, common_prefix)
-    assert common_prefix.startswith(root_dir_i)
+    dirs_i = set(
+        os.path.dirname(x)
+        for x in runtime_info_collection['files']
+    )
+    common_prefix_i = os.path.commonpath(tuple(dirs_i)).rstrip('/')
+    assert common_prefix_i.startswith(root_dir_i)
     
-    dirs_o = ('{}/{}'.format(root_dir_o, x[len(common_prefix) + 1:])
-              for x in dirs_i)
+    dirs_o = ('{}/{}'.format(
+        root_dir_o, x[len(common_prefix_i):].lstrip('/')
+    ) for x in dirs_i)
+    common_prefix_o = '{}/{}'.format(
+        root_dir_o,
+        common_prefix_i[len(root_dir_i):].lstrip('/')
+    )
+    os.makedirs(common_prefix_o, exist_ok=True)
+    
+    # print(root_dir_i, root_dir_o, dirs_i, common_prefix_i)
+    
     for d in sorted(dirs_o):
-        if not os.path.exists(d):
-            print('mkdir', d)
-            os.mkdir(d)
+        print(d)
+        os.makedirs(d, exist_ok=True)
         if add_init_file:
             with open(f'{d}/__init__.py', 'w', encoding='utf-8') as f:
                 f.write('')
     
     io_map = {}  # {str_file_i: str_file_o, ...}
     for file_i in runtime_info_collection['files']:
-        file_o = '{}/{}'.format(root_dir_o, file_i[len(common_prefix) + 1:])
+        file_o = '{}/{}'.format(
+            root_dir_o,
+            file_i[len(common_prefix_i):].lstrip('/')
+        )
         io_map[file_i] = file_o
     return io_map
