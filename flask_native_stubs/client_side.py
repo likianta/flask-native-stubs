@@ -22,8 +22,6 @@ def _add_route(func, path: str = None):
     
     @wraps(func)
     def wrapper(*args, **kwargs):
-        param_count = func.__code__.co_argcount
-        param_names = func.__code__.co_varnames[:param_count]
-        return delegate_call(path, param_names)(*args, **kwargs)
+        return delegate_call(path)(*args, **kwargs)
     
     return wrapper

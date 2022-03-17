@@ -50,7 +50,8 @@ def delegate_params(func):
             else:
                 # TODO: custom deserializer, for example, encrypted data.
                 raise Exception(f'Unknown deserializer: {gc.SERIALIZATION}')
-            return func(**params)
+            # see also `func delegate_call : (code occurrence) resp = get(...)`.
+            return func(*params['args'], **params['kwargs'])
     
     return delegate
 
@@ -94,12 +95,8 @@ def delegate_return(func):
     return delegate
 
 
-def delegate_call(path: str, arg_names: tuple):
+def delegate_call(path: str):
     def delegate(*args, **kwargs):
-        for name, arg in zip(arg_names, args):
-            kwargs[name] = arg
-        # print(kwargs)
-        
         if CONNECTION.HOST is None:
             print('[flask_native_stubs] You forgot calling '
                   '`flask_native_stubs.setup(...)` at the startup!')
@@ -108,9 +105,13 @@ def delegate_call(path: str, arg_names: tuple):
             url = f'http://{CONNECTION.HOST}:{CONNECTION.PORT}/{path}'
         
         if gc.SERIALIZATION == 'json':
-            resp = get(url, params={'data': json.dumps(kwargs)})
+            resp = get(url, params={'data': json.dumps({
+                'args': args, 'kwargs': kwargs
+            })})
         elif gc.SERIALIZATION == 'pickle':
-            resp = get(url, params={'data': pickle.dumps(kwargs)})
+            resp = get(url, params={'data': pickle.dumps({
+                'args': args, 'kwargs': kwargs
+            })})
         else:
             raise Exception(f'Unknown serializer: {gc.SERIALIZATION}')
         
