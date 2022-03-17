@@ -33,6 +33,10 @@ runtime_info_collection = {
 def generate_stub_files(dir_o: str) -> None:
     if gc.COLLECT_RUNTIME_INFO is False:
         raise Exception('Runtime info collection is not enabled!')
+    if not runtime_info_collection['files']:
+        raise Exception('No decorated functions collected!')
+    
+    # print(runtime_info_collection)
     
     io_map = _create_empty_dirs(dir_o, add_init_file=True)
     
@@ -76,11 +80,12 @@ def generate_stub_files(dir_o: str) -> None:
 
 
 def _create_empty_dirs(dir_o: str, add_init_file: bool) -> dict:
-    root_dir_i = runtime_info_collection['root_path']
-    root_dir_o = dir_o
+    root_dir_i = runtime_info_collection['root_path'].replace('\\', '/')
+    root_dir_o = dir_o.replace('\\', '/')
     
-    dirs_i = set(os.path.dirname(x) for x in runtime_info_collection)
-    common_prefix = os.path.commonprefix(tuple(dirs_i))
+    dirs_i = set(os.path.dirname(x) for x in runtime_info_collection['files'])
+    common_prefix = os.path.commonprefix(tuple(dirs_i)).rstrip('/')
+    # print(root_dir_i, root_dir_o, dirs_i, common_prefix)
     assert common_prefix.startswith(root_dir_i)
     
     dirs_o = ('{}/{}'.format(root_dir_o, x[len(common_prefix) + 1:])

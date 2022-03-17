@@ -1,3 +1,5 @@
+import os.path
+
 from flask import Flask
 
 from . import global_controls as gc
@@ -20,9 +22,11 @@ def auto_route(path=None):
         app.add_url_rule('/' + path, None, delegate_func)
         
         if gc.COLLECT_RUNTIME_INFO:
-            file_path = func.__code__.co_filename
+            file_path = os.path.normpath(func.__code__.co_filename)
+            # print(file_path, runtime_info_collection['root_path'])
             if file_path.startswith(runtime_info_collection['root_path']):
                 info = get_function_info(func)
+                # print(info)
                 func_name = info.pop('name')
                 runtime_info_collection['files'][file_path][func_name] = info
         

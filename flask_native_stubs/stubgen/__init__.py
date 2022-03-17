@@ -5,6 +5,7 @@ from .runtime_stubgen import runtime_info_collection
 
 
 def enable_stubgen(project_root_path: str):
+    import os.path
     from .. import global_controls as gc
     gc.COLLECT_RUNTIME_INFO = True
-    runtime_info_collection['root_path'] = project_root_path
+    runtime_info_collection['root_path'] = os.path.abspath(project_root_path)
