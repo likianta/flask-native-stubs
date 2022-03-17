@@ -20,10 +20,11 @@ def auto_route(path=None):
         app.add_url_rule('/' + path, None, delegate_func)
         
         if gc.COLLECT_RUNTIME_INFO:
-            info = get_function_info(func)
-            func_name = info.pop('name')
-            runtime_info_collection['files'][
-                func.__code__.co_filename][func_name] = info
+            file_path = func.__code__.co_filename
+            if file_path.startswith(runtime_info_collection['root_path']):
+                info = get_function_info(func)
+                func_name = info.pop('name')
+                runtime_info_collection['files'][file_path][func_name] = info
         
         return func
     
