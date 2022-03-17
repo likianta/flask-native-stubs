@@ -5,6 +5,7 @@ usage: `~/docs/how-to-generate-python-stub-files-(pyi).zh.md`.
 import os
 from collections import defaultdict
 from textwrap import dedent
+from typing import Union
 
 from .. import global_controls as gc
 
@@ -30,28 +31,29 @@ runtime_info_collection = {
 '''
 
 
-def generate_stub_files(dir_o: str, flat_dir=False) -> None:
+def generate_stub_files(
+        dir_o: str, io_map: Union[str, dict] = 'tree_map'
+) -> bool:
     if gc.COLLECT_RUNTIME_INFO is False:
         raise Exception('Runtime info collection is not enabled! '
                         'Did you forget to call `flask_native_stubs'
                         '.enable_stubgen()`?')
     if not runtime_info_collection['files']:
-        raise Exception('No decorated functions collected!')
+        _reset_runtime_info_collection()
+        return False
     
     # print(runtime_info_collection)
     
-    if flat_dir:
-        os.makedirs(dir_o, exist_ok=True)
-        all_file_paths = tuple(runtime_info_collection['files'])
-        all_file_names = tuple(map(os.path.basename, all_file_paths))
-        assert len(all_file_names) == len(set(all_file_names)), (
-            'Cannot apply `flat_dir` feature: there are duplicate file names!'
-        )
-        io_map = {fp: f'{dir_o}/{fn}' for fp, fn in zip(
-            all_file_paths, all_file_names
-        )}
+    if isinstance(io_map, str):
+        if io_map == 'tree_map':
+            io_map = _gen_tree_map(dir_o)
+        elif io_map == 'flat_map':
+            io_map = _gen_flat_map(dir_o)
+        else:
+            raise Exception(io_map)
     else:
-        io_map = _create_empty_dirs(dir_o, add_init_file=False)
+        io_map = _normalize_io_map(io_map)
+    assert isinstance(io_map, dict)
     
     for file, v0 in runtime_info_collection['files'].items():
         file_i = file
@@ -91,13 +93,73 @@ def generate_stub_files(dir_o: str, flat_dir=False) -> None:
             ))
         print(f'file generated: {file_o}')
     
-    # reset, to be reusable.
+    _reset_runtime_info_collection()
+    return True
+
+
+def _reset_runtime_info_collection():
     runtime_info_collection.clear()
     runtime_info_collection.update({
         'root_path': '',
-        'files': defaultdict(dict)
+        'files'    : defaultdict(dict)
     })
 
+
+# -----------------------------------------------------------------------------
+
+def _gen_tree_map(dir_o: str) -> dict:
+    return _create_empty_dirs(dir_o, add_init_file=False)
+
+
+def _gen_flat_map(dir_o: str) -> dict:
+    os.makedirs(dir_o, exist_ok=True)
+    all_file_paths = tuple(runtime_info_collection['files'])
+    all_file_names_0 = tuple(map(os.path.basename, all_file_paths))
+    all_file_names_1 = set(all_file_names_0)
+    
+    if len(all_file_names_1) == len(all_file_names_0):
+        return {fp: f'{dir_o}/{fn}' for fp, fn in zip(
+            all_file_paths, all_file_names_0
+        )}
+    else:  # collect conflicts, and raise error
+        conflicts = [x for x in all_file_names_0 if x not in all_file_names_1]
+        raise Exception(
+            'Cannot apply `flat_dir` feature: there are duplicate file '
+            'names!\n{}'.format('\n'.join(conflicts))
+        )
+
+
+def _normalize_io_map(raw_io_map: dict) -> dict:
+    new_io_map = {}
+    dirs_to_create = set()
+    
+    for k, v in raw_io_map.items():
+        k = os.path.abspath(k)
+        v = os.path.abspath(v)
+        
+        if os.path.isdir(k):
+            new_io_map.update({f'{k}/{x}': f'{v}/{x}' for x in os.listdir(k)})
+            dirs_to_create.add(v)
+        else:
+            new_io_map[k] = v
+            dirs_to_create.add(os.path.dirname(v))
+    
+    if insufficient := [
+        x for x in runtime_info_collection['files']
+        if x not in new_io_map
+    ]:
+        raise Exception(
+            'Uncovered io_map entries! \n{}'.format(
+                '\n'.join(insufficient)
+            )
+        )
+    else:
+        for d in sorted(dirs_to_create):
+            os.makedirs(d, exist_ok=True)
+        return new_io_map
+
+
+# -----------------------------------------------------------------------------
 
 def _create_empty_dirs(dir_o: str, add_init_file: bool) -> dict:
     root_dir_i = runtime_info_collection['root_path'].replace('\\', '/')
