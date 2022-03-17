@@ -1,3 +1,4 @@
+from . import global_controls as gc
 from .client_side import add_route
 from .client_side import setup
 from .server_side import app

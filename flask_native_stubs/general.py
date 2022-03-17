@@ -26,7 +26,8 @@ def get_function_info(func) -> dict:
     param_count = func.__code__.co_argcount + func.__code__.co_kwonlyargcount
     param_names = func.__code__.co_varnames[:param_count]
     annotations = func.__annotations__
-    kw_defaults = func.__defaults__
+    kw_defaults = func.__defaults__ or ()
+    # print(func.__name__, param_count, param_names, annotations, kw_defaults)
     
     func_name = func.__name__
     args: list
@@ -47,18 +48,25 @@ def get_function_info(func) -> dict:
     }
     
     args = []
-    for name in param_names[:-len(kw_defaults)]:
+    if kw_defaults:
+        arg_names = param_names[:-len(kw_defaults)]
+    else:
+        arg_names = param_names
+    for name in arg_names:
         args.append(
             (name, type_2_str.get(annotations.get(name, str), 'Any'))
         )
     
     kwargs = []
-    if isinstance(kw_defaults, tuple):
-        kw_defaults = dict(zip(param_names[-len(kw_defaults):], kw_defaults))
-    for name, value in kw_defaults.items():
-        kwargs.append(
-            (name, type_2_str.get(annotations.get(name, str), 'Any'), value)
-        )
+    if kw_defaults:
+        if isinstance(kw_defaults, tuple):
+            kw_defaults = dict(
+                zip(param_names[-len(kw_defaults):], kw_defaults)
+            )
+        for name, value in kw_defaults.items():
+            kwargs.append(
+                (name, type_2_str.get(annotations.get(name, str), 'Any'), value)
+            )
     
     return_ = type_2_str.get(annotations.get('return', None), 'Any')
     

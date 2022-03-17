@@ -31,7 +31,7 @@ def delegate_params(func):
     def delegate(*args, **kwargs):
         if not any((
                 info['args'], info['kwargs'],
-                info['has_*args'], info['has_**kwargs']
+                # info['has_*args'], info['has_**kwargs']
         )):
             return func()
         
