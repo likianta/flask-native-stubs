@@ -4,17 +4,45 @@ import sys
 from functools import wraps
 from traceback import format_exc
 
+import urllib3
 from flask import Response
 from flask import request
+from requests import Session
 from requests import get
 
 from . import global_controls as gc
 from .general import get_function_info
 
 
-class CONNECTION:
-    HOST: str = None
-    PORT: int = None
+class Request:
+    
+    def __init__(self):
+        self.host = None
+        self.port = None
+        self.protocol = 'http'
+        self._session = Session()
+
+    def add_cert(self, cert_file: str, disable_warnings=True):
+        """
+        disable_warnings:
+            if you're using a self-signed certificate, `requests` may raise
+            `SubjectAltNameWarning`. we can disable this by setting
+            `urllib3.disable_warnings`.
+            
+            https://stackoverflow.com/questions/42839363/python-disable-warnings
+                -for-securitywarning-certificate-has-no-subjectaltnam
+        """
+        self.protocol = 'https'
+        self._session.verify = cert_file
+        if disable_warnings:
+            urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
+
+    @property
+    def url(self) -> str:
+        return f'{self.protocol}://{self.host}:{self.port}'
+
+
+req = Request()
 
 
 class CONTENT_TYPE:  # noqa
@@ -97,12 +125,12 @@ def delegate_return(func):
 
 def delegate_call(path: str):
     def delegate(*args, **kwargs):
-        if CONNECTION.HOST is None:
+        if req.host is None:
             print('[flask_native_stubs] You forgot calling '
                   '`flask_native_stubs.setup(...)` at the startup!')
             sys.exit(1)
         else:
-            url = f'http://{CONNECTION.HOST}:{CONNECTION.PORT}/{path}'
+            url = f'{req.url}/{path}'
         
         if gc.SERIALIZATION == 'json':
             resp = get(url, params={'data': json.dumps({
