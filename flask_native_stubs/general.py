@@ -18,7 +18,7 @@ def get_function_info(func) -> dict:
         [2]: there is no empty return type.
              for a callback case, it uses 'None';
              for an unknown type, it uses 'Any'.
-        [3][4]: v0.1.0 doesn't support.
+        [3][4]: v0.2 doesn't support.
     
     relevant:
         ./stubgen/runtime_stubgen.py

@@ -6,14 +6,15 @@ from . import global_controls as gc
 from .delegates import delegate_params
 from .delegates import delegate_return
 from .general import get_function_info
-from .stubgen import runtime_info_collection
 
 app = Flask('flask_native_stubs')
 
 
 def auto_route(path=None):
     def decorator(func):
+        from .stubgen import runtime_info_collection
         nonlocal path
+        
         if path is None:
             path = func.__name__.replace('_', '-')
         

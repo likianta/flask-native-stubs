@@ -14,15 +14,15 @@ runtime_info_collection = {
     'files'    : defaultdict(dict)
 }
 ''' {
-        'root_path': str,
+        'root_path': str abspath,
         'files': {
-            str filepath: {
+            str filepath: {  # the filepath is always absolute path.
                 str func_name: {
                     # see `../general.py`
                     'args': ...,
                     'kwargs': ...,
-                    'has_*args': ...,  # v0.1.0 doesn't support
-                    'has_**kwargs': ...,  # v0.1.0 doesn't support
+                    'has_*args': ...,  # v0.2 doesn't support
+                    'has_**kwargs': ...,  # v0.2 doesn't support
                     'return': ...,
                 }, ...
             }, ...
@@ -31,21 +31,28 @@ runtime_info_collection = {
 '''
 
 
+def reset_runtime_info_collection():
+    runtime_info_collection.clear()
+    runtime_info_collection.update({
+        'root_path': '',
+        'files'    : defaultdict(dict)
+    })
+
+
 def generate_stub_files(
         dir_o: str, io_map: Union[str, dict] = 'tree_map',
         add_init_files=True
-) -> bool:
+) -> bool:  # return True for succeed, False for failed.
     if gc.COLLECT_RUNTIME_INFO is False:
         raise Exception('Runtime info collection is not enabled! '
                         'Did you forget to call `flask_native_stubs'
                         '.enable_stubgen()`?')
     if not runtime_info_collection['files']:
-        _reset_runtime_info_collection()
         return False
     
     dir_o = os.path.abspath(dir_o)
     
-    # print(runtime_info_collection)
+    # print(runtime_info_collection, ':l')
     
     if isinstance(io_map, str):
         if io_map == 'tree_map':
@@ -99,16 +106,8 @@ def generate_stub_files(
     if add_init_files:
         _add_init_files(dir_o)
     
-    _reset_runtime_info_collection()
+    reset_runtime_info_collection()
     return True
-
-
-def _reset_runtime_info_collection():
-    runtime_info_collection.clear()
-    runtime_info_collection.update({
-        'root_path': '',
-        'files'    : defaultdict(dict)
-    })
 
 
 # -----------------------------------------------------------------------------
@@ -135,34 +134,38 @@ def _gen_flat_map(dir_o: str) -> dict:
         )
 
 
-def _normalize_io_map(raw_io_map: dict) -> dict:
+def _normalize_io_map(io_map: dict) -> dict:
+    # normalize with abspath.
+    io_map = {os.path.abspath(k): os.path.abspath(v)
+              for k, v in io_map.items()}
+    
+    collected_file_paths = tuple(runtime_info_collection['files'])
+    defined_paths = tuple(sorted(io_map.keys(), reverse=True))
+    
     new_io_map = {}
-    dirs_to_create = set()
     
-    for k, v in raw_io_map.items():
-        k = os.path.abspath(k)
-        v = os.path.abspath(v)
-        
-        if os.path.isdir(k):
-            new_io_map.update({f'{k}/{x}': f'{v}/{x}' for x in os.listdir(k)})
-            dirs_to_create.add(v)
+    for fp in collected_file_paths:
+        if fp in defined_paths:
+            new_io_map[fp] = io_map[fp]
         else:
-            new_io_map[k] = v
-            dirs_to_create.add(os.path.dirname(v))
+            for i in defined_paths:
+                if fp.startswith(i):
+                    file_i = fp
+                    file_o = io_map[i] + fp[len(i):]
+                    new_io_map[file_i] = file_o
+                    break
+            else:
+                print(':l', fp, defined_paths, collected_file_paths)
+                raise Exception(f'Undefined file path: {fp}')
     
-    if insufficient := [
-        x for x in runtime_info_collection['files']
-        if x not in new_io_map
-    ]:
-        raise Exception(
-            'Uncovered io_map entries! \n{}'.format(
-                '\n'.join(insufficient)
-            )
-        )
-    else:
-        for d in sorted(dirs_to_create):
-            os.makedirs(d, exist_ok=True)
-        return new_io_map
+    dirs_to_create = set()
+    for k, v in new_io_map.items():
+        dirs_to_create.add(os.path.dirname(v))
+    for d in dirs_to_create:
+        os.makedirs(d, exist_ok=True)
+    del dirs_to_create
+    
+    return new_io_map
 
 
 # -----------------------------------------------------------------------------
