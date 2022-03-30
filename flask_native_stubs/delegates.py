@@ -94,10 +94,12 @@ def delegate_return(func):
         try:
             result = func(*args, **kwargs)
         except Exception as e:
-            if gc.TRACEBACK_DETAILED_EXCEPTIONS:
-                error_msg = format_exc()
-            else:
+            if gc.EXCEPTION_HANDLE == 0:
+                raise e
+            elif gc.EXCEPTION_HANDLE == 1:
                 error_msg = str(e)
+            else:
+                error_msg = format_exc()
             result = json.dumps({
                 'filename': func.__code__.co_filename,
                 'lineno'  : func.__code__.co_firstlineno,
@@ -161,7 +163,10 @@ def delegate_call(path: str):
             return json.loads(data)
         elif content_type == CONTENT_TYPE.ERROR:
             error_info = json.loads(data)
-            if gc.TRACEBACK_DETAILED_EXCEPTIONS:
+            if gc.EXCEPTION_HANDLE <= 1:
+                print(f'[RemoteError] {error_info["error"]}', ':v4p2')
+                sys.exit(1)
+            else:
                 raise Exception(dedent('''
                     Error occurred in the remote server:
                         Unexpected error happend at {}:{} >> {}
@@ -172,9 +177,6 @@ def delegate_call(path: str):
                     error_info['funcname'],
                     error_info['error'],
                 ).strip())
-            else:
-                print(f'[RemoteError] {error_info["error"]}', ':v4p2')
-                sys.exit(1)
         else:
             raise Exception('Invalid content type: ' + content_type,
                             f'{session.url}/{path}')
