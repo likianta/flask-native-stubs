@@ -119,7 +119,7 @@ def delegate_return(func):
                         'filename': func.__code__.co_filename,
                         'lineno'  : func.__code__.co_firstlineno,
                         'funcname': func.__name__,
-                    })
+                    }, ':v4')
                     raise e
                 # # result = json.dumps(result, default=str)
                 mimetype = CONTENT_TYPE.OBJECT
@@ -132,7 +132,7 @@ def delegate_call(path: str):
     def delegate(*args, **kwargs):
         if session.host is None:
             print('[flask_native_stubs] You forgot calling '
-                  '`flask_native_stubs.setup(...)` at the startup!')
+                  '`flask_native_stubs.setup(...)` at the startup!', ':v4')
             raise SystemExit(1)
         
         if gc.SERIALIZATION == 'json':
@@ -173,7 +173,7 @@ def delegate_call(path: str):
                     error_info['error'],
                 ).strip())
             else:
-                print(f'[RemoteError] {error_info["error"]}', ':p2')
+                print(f'[RemoteError] {error_info["error"]}', ':v4p2')
                 sys.exit(1)
         else:
             raise Exception('Invalid content type: ' + content_type,
