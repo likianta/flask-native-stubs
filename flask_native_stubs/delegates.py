@@ -133,7 +133,7 @@ def delegate_call(path: str):
         if session.host is None:
             print('[flask_native_stubs] You forgot calling '
                   '`flask_native_stubs.setup(...)` at the startup!')
-            sys.exit(1)
+            raise SystemExit(1)
         
         if gc.SERIALIZATION == 'json':
             resp = session.get(path, params={'data': json.dumps({
@@ -173,7 +173,7 @@ def delegate_call(path: str):
                     error_info['error'],
                 ).strip())
             else:
-                print(f'[RemoteError] {error_info["error"]}')
+                print(f'[RemoteError] {error_info["error"]}', ':p2')
                 sys.exit(1)
         else:
             raise Exception('Invalid content type: ' + content_type,

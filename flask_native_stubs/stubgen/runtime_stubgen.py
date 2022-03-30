@@ -43,6 +43,14 @@ def generate_stub_files(
         dir_o: str, io_map: Union[str, dict] = 'tree_map',
         add_init_files=True
 ) -> bool:  # return True for succeed, False for failed.
+    """
+    args:
+        dir_o: str path. assert exists.
+        io_map: str | dict.
+            str: 'tree_map' | 'flat_map'.
+            dict: dict[str path_i, str path_o].
+        add_init_files: bool.
+    """
     if gc.COLLECT_RUNTIME_INFO is False:
         raise Exception('Runtime info collection is not enabled! '
                         'Did you forget to call `flask_native_stubs'
