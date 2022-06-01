@@ -1,59 +1,15 @@
 import json
 import pickle
-import sys
 from functools import wraps
-from textwrap import dedent
 from traceback import format_exc
 
-import urllib3
 from flask import Response
 from flask import request
-from requests import Session as _Session
 
 from . import global_controls as gc
 from .general import get_function_info
-
-
-class Session:
-    
-    def __init__(self):
-        self.host = None
-        self.port = None
-        self.protocol = 'http'
-        self._session = _Session()
-    
-    def add_cert(self, cert_file: str, disable_warnings=True):
-        """
-        disable_warnings:
-            if you're using a self-signed certificate, `requests` may raise
-            `SubjectAltNameWarning`. we can disable this by setting
-            `urllib3.disable_warnings`.
-            
-            https://stackoverflow.com/questions/42839363/python-disable-warnings
-                -for-securitywarning-certificate-has-no-subjectaltnam
-        """
-        self.protocol = 'https'
-        self._session.verify = cert_file
-        if disable_warnings:
-            urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
-    
-    def get(self, path: str, params: dict = None):
-        return self._session.get(f'{self.url}/{path}', params=params)
-    
-    @property
-    def url(self) -> str:
-        # assert self.host is not None
-        return f'{self.protocol}://{self.host}:{self.port}'
-
-
-session = Session()
-
-
-class CONTENT_TYPE:  # noqa
-    BASIC = 'application/python-basic'
-    ERROR = 'application/python-error'
-    OBJECT = 'application/python-object'
-    TEXT = 'text/html'
+from .requests import CONTENT_TYPE
+from .requests import session
 
 
 def delegate_params(func):
@@ -132,53 +88,8 @@ def delegate_return(func):
 
 def delegate_call(path: str):
     def delegate(*args, **kwargs):
-        if session.host is None:
-            print('[flask_native_stubs] You forgot calling '
-                  '`flask_native_stubs.setup(...)` at the startup!', ':v4')
-            raise SystemExit(1)
-        
-        if gc.SERIALIZATION == 'json':
-            resp = session.get(path, params={'data': json.dumps({
-                'args': args, 'kwargs': kwargs
-            })})
-        elif gc.SERIALIZATION == 'pickle':
-            resp = session.get(path, params={'data': pickle.dumps({
-                'args': args, 'kwargs': kwargs
-            })})
-        else:
-            raise Exception(f'Unknown serializer: {gc.SERIALIZATION}')
-        
-        data = resp.content  # type: bytes
-        content_type = resp.headers['Content-Type'].split(';')[0]
-        #   `~.split(';')[0]`: e.g. 'text/html; charset=utf-8' -> 'text/html'
-        
-        if resp.status_code >= 400:
-            raise Exception(f'HTTP status code error: {resp.status_code}', data)
-        
-        if content_type == CONTENT_TYPE.TEXT:
-            return data.decode('utf-8').strip()
-        elif content_type == CONTENT_TYPE.BASIC:
-            return eval(data)
-        elif content_type == CONTENT_TYPE.OBJECT:
-            return json.loads(data)
-        elif content_type == CONTENT_TYPE.ERROR:
-            error_info = json.loads(data)
-            if gc.EXCEPTION_HANDLE <= 1:
-                print(f'[RemoteError] {error_info["error"]}', ':v4p2')
-                sys.exit(1)
-            else:
-                raise Exception(dedent('''
-                    Error occurred in the remote server:
-                        Unexpected error happend at {}:{} >> {}
-                        Error info: {}
-                ''').format(
-                    error_info['filename'],
-                    error_info['lineno'],
-                    error_info['funcname'],
-                    error_info['error'],
-                ).strip())
-        else:
-            raise Exception('Invalid content type: ' + content_type,
-                            f'{session.url}/{path}')
+        return session.get(path, params={
+            'args': args, 'kwargs': kwargs,
+        })
     
     return delegate
