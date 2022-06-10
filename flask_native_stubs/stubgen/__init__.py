@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from .add_route import add_route
 from .runtime_stubgen import generate_stub_files
 from .runtime_stubgen import runtime_info_collection
-from ..server_side import app
+from ..app import app
 
 
 def enable_stubgen(watch_directory: str):
