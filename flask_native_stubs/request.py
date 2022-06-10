@@ -2,6 +2,7 @@ import typing as t
 
 from requests import Session as _Session
 
+from .protocol import WeakError
 from .protocol import serializer
 from .response import MimeType
 
@@ -64,7 +65,7 @@ class Session:
         elif content_type == MimeType.ERROR:
             text = data.decode(encoding='utf-8')
             print('[RemoteError]', text, ':v4p4')
-            exit(1)
+            return self._exit(text)
         elif content_type == MimeType.CRITICAL_ERROR:
             text = data.decode(encoding='utf-8')
             print('[RemoteError]', text, ':v5p4')
@@ -73,7 +74,7 @@ class Session:
             except:
                 pass
             finally:
-                exit(0)
+                return self._exit(text, force=True)
         else:
             raise Exception('Unknown content type: ' + content_type, url)
     
@@ -84,6 +85,27 @@ class Session:
                   '`flask_native_stubs.setup(...)` at the startup!', ':v4p5')
             exit(1)
         return f'{self.protocol}://{self.host}:{self.port}'
+    
+    @staticmethod
+    def _exit(info, force: bool = False) -> t.Optional[WeakError]:
+        from .app import app
+        if force:
+            exit(1)
+        if app.is_running:
+            """ a daemon role for example.
+                client - daemon - server
+                         ~~~~~~ i'm daemon
+                    1. server responds a WeakError to daemon
+                    2. daemon deliveries the same error to client
+                    3. client exits. (daemon and server are still running)
+            """
+            return WeakError(info)
+        else:
+            """ else a client role.
+                client - daemon - server
+                ~~~~~~ i'm client
+            """
+            exit(1)
 
 
 session = Session()

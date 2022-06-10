@@ -1,4 +1,5 @@
 import os
+import typing as t
 from functools import partial
 
 from flask import Flask
@@ -9,7 +10,28 @@ from .general import get_function_info
 
 __all__ = ['app', 'auto_route']
 
-app = Flask('flask_native_stubs')
+
+class FlaskNative(Flask):
+    is_running = False
+    
+    def __init__(self, name='flask_native_stubs'):
+        super().__init__(name)
+        
+    def run(
+        self,
+        host: t.Optional[str] = None,
+        port: t.Optional[int] = None,
+        debug: t.Optional[bool] = None,
+        load_dotenv: bool = True,
+        **options: t.Any,
+    ) -> None:
+        self.is_running = True
+        super().run(host, port, debug, load_dotenv, **options)
+        self.is_running = False
+
+
+# app = Flask('flask_native_stubs')
+app = FlaskNative()
 
 
 # decorator way to add route
