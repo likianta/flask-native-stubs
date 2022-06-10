@@ -2,6 +2,7 @@
 name = "flask-native-stubs"
 version = "1.0.0dev0"
 description = "Call flask decorated functions like native ones."
+homepage = "https://github.com/likianta/flask-native-stubs"
 readme = "README.md"
 authors = ["Likianta <likianta@foxmail.com>"]
 license = "MIT"
