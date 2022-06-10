@@ -54,10 +54,10 @@ class Session:
         elif content_type == MimeType.OBJECT:
             return serializer.loads(data)
         elif content_type == MimeType.ERROR:
-            print(data)
+            print(f'[RemoteError] {data}')
             exit(1)
         elif content_type == MimeType.CRITICAL_ERROR:
-            print(data)
+            print(f'[RemoteError] {data}')
             self.post('/--tell-server-im-done')
             exit(1)
         else:

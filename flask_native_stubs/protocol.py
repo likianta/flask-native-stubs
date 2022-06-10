@@ -26,6 +26,7 @@ serializer = Serializer(config.SERIALIZATION)
 
 
 class WeakError(Exception):
+    error: Exception = None
     position: tuple[str, int]  # file name and line number
     content: str  # error message
     
@@ -33,6 +34,8 @@ class WeakError(Exception):
         # info = getframeinfo(currentframe().f_back)
         # self.position = (info.filename, info.lineno)
         self.content = str(error) if error else ''
+        if isinstance(error, Exception):
+            self.error = error
     
     def __str__(self):
         return self.content

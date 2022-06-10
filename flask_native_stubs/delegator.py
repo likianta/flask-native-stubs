@@ -24,11 +24,14 @@ def delegate_local_call(func: t.Callable):
         except Exception as e:
             if isinstance(e, WeakError):
                 # respond and continue
+                from traceback import print_exception
+                print_exception(e.error or e)
                 return e
             else:
                 # respond and exit
                 #   note: the exit mechanism refers to [<~/docs/way-to-exit
                 #   -after-sending-response.zh.mo>]
+                # see also [./_safe_exit.py] for traceback print_exception.
                 return CriticalError(e)
     
     return delegate
