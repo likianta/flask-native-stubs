@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import typing as t
-from inspect import currentframe  # noqa
-from inspect import getframeinfo  # noqa
 
 from . import config
 
