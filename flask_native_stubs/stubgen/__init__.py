@@ -20,12 +20,12 @@ from ..server_side import app
 
 def enable_stubgen(watch_directory: str):
     import os.path
-    from .. import global_controls as gc
+    from .. import config
     
     runtime_info_collection['root_path'] = os.path.abspath(watch_directory)
-    
-    gc.COLLECT_RUNTIME_INFO = True
-    gc.SIMULATION_MODE = True
+
+    config.COLLECT_RUNTIME_INFO = True
+    config.SIMULATION_MODE = True
     
     _disable_app_run()
 

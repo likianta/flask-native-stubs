@@ -6,7 +6,7 @@ from traceback import format_exc
 from flask import Response
 from flask import request
 
-from . import global_controls as gc
+from . import config
 from .general import get_function_info
 from .requests import CONTENT_TYPE
 from .requests import session
@@ -30,14 +30,14 @@ def delegate_params(func):
             # args is () and kwargs is {}, we should gain the real params from
             #   flask `request`.
             serialized_data: str = request.args['data']
-            if gc.SERIALIZATION == 'json':
+            if config.SERIALIZATION == 'json':
                 params = json.loads(serialized_data)
-            elif gc.SERIALIZATION == 'pickle':
+            elif config.SERIALIZATION == 'pickle':
                 # FIXME: `pickle` is not safe.
                 params = pickle.loads(serialized_data.encode('utf-8'))
             else:
                 # TODO: custom deserializer, for example, encrypted data.
-                raise Exception(f'Unknown deserializer: {gc.SERIALIZATION}')
+                raise Exception(f'Unknown deserializer: {config.SERIALIZATION}')
             # see also `func delegate_call : (code occurrence) resp = get(...)`.
             return func(*params['args'], **params['kwargs'])
     
@@ -50,9 +50,9 @@ def delegate_return(func):
         try:
             result = func(*args, **kwargs)
         except Exception as e:
-            if gc.EXCEPTION_HANDLE == 0:
+            if config.EXCEPTION_HANDLE == 0:
                 raise e
-            elif gc.EXCEPTION_HANDLE == 1:
+            elif config.EXCEPTION_HANDLE == 1:
                 error_msg = str(e)
             else:
                 error_msg = format_exc()

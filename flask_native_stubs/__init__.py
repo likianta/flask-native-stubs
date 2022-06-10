@@ -1,4 +1,4 @@
-from . import global_controls as gc
+from . import config
 from . import requests
 from . import stubgen
 from .client_side import add_route
@@ -9,4 +9,4 @@ from .stubgen import enable_stubgen
 from .stubgen import generate_stub_files
 from .stubgen import watch_directory
 
-__version__ = '0.2.5'
+__version__ = '0.3.0'

@@ -7,7 +7,7 @@ from collections import defaultdict
 from textwrap import dedent
 from typing import Union
 
-from .. import global_controls as gc
+from .. import config
 
 runtime_info_collection = {
     'root_path': '',
@@ -51,7 +51,7 @@ def generate_stub_files(
             dict: dict[str path_i, str path_o].
         add_init_files: bool.
     """
-    if gc.COLLECT_RUNTIME_INFO is False:
+    if config.COLLECT_RUNTIME_INFO is False:
         raise Exception('Runtime info collection is not enabled! '
                         'Did you forget to call `flask_native_stubs'
                         '.enable_stubgen()`?')
