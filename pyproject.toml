@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "flask-native-stubs"
-version = "0.3.0"
+version = "1.0.0dev0"
 description = "Call flask decorated functions like native ones."
 readme = "README.md"
 authors = ["Likianta <likianta@foxmail.com>"]
