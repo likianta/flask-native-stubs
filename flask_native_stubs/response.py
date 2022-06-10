@@ -14,25 +14,27 @@ class MimeType:
     OBJECT = 'application/python-object'
     ERROR = 'application/python-error'
     CRITICAL_ERROR = 'application/python-critical-error'
-    TEXT = 'text/html'
+    TEXT = 'application/python-text'
 
 
 class Response(_Response):
-    def __init__(self, result: t.Union[t.Any, WeakError, CriticalError]):
-        if isinstance(result, WeakError):
-            resp = str(result)
-            type_ = MimeType.ERROR
-        elif isinstance(result, CriticalError):
-            from . import _safe_exit
-            _safe_exit.error = result.error
-            resp = 'A critical error happened in remote server. ' \
-                   '(The server is going to shut down.)'
-            type_ = MimeType.CRITICAL_ERROR
-        elif (isinstance(result, (bool, int, bytes, float, str))
-              or str(result) in ('None', '()', '[]', '{}')):
-            resp = str(result)
+    def __init__(self, rv: t.Union[t.Any, WeakError, CriticalError]):
+        if isinstance(rv, str):
+            resp = rv
+            type_ = MimeType.TEXT
+        elif (isinstance(rv, (bool, int, bytes, float))
+              or str(rv) in ('None', '()', '[]', '{}')):
+            resp = str(rv)
             type_ = MimeType.PRIMITIVE
+        elif isinstance(rv, WeakError):
+            resp = str(rv)
+            type_ = MimeType.ERROR
+        elif isinstance(rv, CriticalError):
+            from . import _safe_exit
+            _safe_exit.error = rv.error
+            resp = str(rv.error)
+            type_ = MimeType.CRITICAL_ERROR
         else:
-            resp = serializer.dumps(result)
+            resp = serializer.dumps(rv)
             type_ = MimeType.OBJECT
         super().__init__(resp, mimetype=type_)

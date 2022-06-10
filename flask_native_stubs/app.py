@@ -6,16 +6,15 @@ from flask import Flask
 from . import config
 from .delegator import delegate_local_call
 from .general import get_function_info
-from .response import Response
 
 __all__ = ['app', 'auto_route']
 
 app = Flask('flask_native_stubs')
-app.response_class = Response
 
 
 # decorator way to add route
 def auto_route(path=None):
+    # note: param `path` should not add leading '/'.
     def decorator(func):
         nonlocal path
         if path is None:
@@ -28,7 +27,7 @@ def auto_route(path=None):
         else:
             app.add_url_rule(
                 '/' + path, func.__name__,
-                partial(delegate_local_call, func, _is_local_call=False),
+                partial(delegate_local_call(func), _is_local_call=False),
                 methods=('POST',)
             )
         
