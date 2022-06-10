@@ -32,7 +32,8 @@ class Session:
         self._session.verify = cert_file
         if disable_warnings:
             import urllib3
-            urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
+            from urllib3.exceptions import SubjectAltNameWarning
+            urllib3.disable_warnings(SubjectAltNameWarning)
     
     def post(self, path: str, params: dict = None) -> t.Any:
         url = f'{self.url}/{path}'
