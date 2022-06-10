@@ -27,7 +27,7 @@ def auto_route(path=None):
             pass
         else:
             app.add_url_rule(
-                '/' + path, None,
+                '/' + path, func.__name__,
                 partial(delegate_local_call, func, _is_local_call=False),
                 methods=('POST',)
             )
