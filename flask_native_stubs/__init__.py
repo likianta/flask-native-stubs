@@ -9,4 +9,7 @@ from .stubgen import enable_stubgen
 from .stubgen import generate_stub_files
 from .stubgen import watch_directory
 
+# defer init
+from . import _safe_exit
+
 __version__ = '1.0.0'

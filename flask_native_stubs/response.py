@@ -2,7 +2,6 @@ import typing as t
 
 from flask import Response as _Response
 
-from . import _safe_exit
 from .protocol import CriticalError
 from .protocol import WeakError
 from .protocol import serializer
@@ -24,6 +23,7 @@ class Response(_Response):
             resp = str(result)
             type_ = MimeType.ERROR
         elif isinstance(result, CriticalError):
+            from . import _safe_exit
             _safe_exit.error = result.error
             resp = 'A critical error happened in remote server. ' \
                    '(The server is going to shut down.)'
