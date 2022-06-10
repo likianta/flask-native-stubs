@@ -13,6 +13,7 @@ workflow:
 """
 from contextlib import contextmanager
 
+from .add_route import add_route
 from .runtime_stubgen import generate_stub_files
 from .runtime_stubgen import runtime_info_collection
 from ..server_side import app
@@ -23,7 +24,7 @@ def enable_stubgen(watch_directory: str):
     from .. import config
     
     runtime_info_collection['root_path'] = os.path.abspath(watch_directory)
-
+    
     config.COLLECT_RUNTIME_INFO = True
     config.SIMULATION_MODE = True
     

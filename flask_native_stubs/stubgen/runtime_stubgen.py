@@ -99,7 +99,9 @@ def generate_stub_files(
                 
                 [1]: https://github.com/likianta/flask-native-stubs
                 """
-                from flask_native_stubs import add_route
+                from __future__ import annotations
+                
+                from flask_native_stubs.stubgen import add_route
                 from typing import Any
                 
                 {functions}
