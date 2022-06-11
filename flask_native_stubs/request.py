@@ -65,7 +65,8 @@ class Session:
         elif content_type == MimeType.ERROR:
             text = data.decode(encoding='utf-8')
             print('[RemoteError]', text, ':v4p4')
-            return self._exit(text)
+            exit(1)  # exit code 1 for WeakError.
+            #   see also [./safe_exit.py : def on_error]
         elif content_type == MimeType.CRITICAL_ERROR:
             text = data.decode(encoding='utf-8')
             print('[RemoteError]', text, ':v5p4')
@@ -74,7 +75,8 @@ class Session:
             except:
                 pass
             finally:
-                return self._exit(text, force=True)
+                exit(2)  # exit code 2 for CriticalError.
+                #   see also [./safe_exit.py : def on_error]
         else:
             raise Exception('Unknown content type: ' + content_type, url)
     
@@ -86,7 +88,7 @@ class Session:
             exit(1)
         return f'{self.protocol}://{self.host}:{self.port}'
     
-    @staticmethod
+    @staticmethod  # DELETE: not used any more.
     def _exit(info, force: bool = False) -> t.Optional[WeakError]:
         from .app import app
         if force:

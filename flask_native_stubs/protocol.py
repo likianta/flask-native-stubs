@@ -42,6 +42,7 @@ class WeakError(Exception):
 
 
 class CriticalError(Exception):
+    """ the critical/fatal/unexpected error. """
     
     def __init__(self, error):
         self.error = error
