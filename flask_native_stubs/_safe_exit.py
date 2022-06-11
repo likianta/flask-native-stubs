@@ -3,18 +3,20 @@ from typing import Literal
 from .app import app
 from .app import auto_route
 from .protocol import CriticalError
+from .protocol import ExitCode
 from .protocol import WeakError
 
-__all__ = ['error', 'on_error']
+__all__ = ['error']
 
 error = None
 
 
+# DELETE: not used any more.
 def on_error(func, args=(), kwargs=None, scheme: Literal[
     'auto', 'exit', 'ignore', 'transmit',
 ] = 'auto'):
     try:
-        func(*args, **(kwargs or {}))
+        return func(*args, **(kwargs or {}))
     # except Exception as e:
     #     pass
     except SystemExit as e:
@@ -43,4 +45,4 @@ def _client_is_done():
     from sys import exit
     from traceback import print_exception
     print_exception(error)
-    exit(-1)
+    exit(ExitCode.SAFE_EXIT)

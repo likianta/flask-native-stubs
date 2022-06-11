@@ -10,6 +10,6 @@ from .stubgen import generate_stub_files
 from .stubgen import watch_directory
 
 # defer init
-from .safe_exit import on_error
+from . import _safe_exit
 
 __version__ = '0.3.0'

@@ -30,8 +30,8 @@ class Response(_Response):
             resp = str(rv)
             type_ = MimeType.ERROR
         elif isinstance(rv, CriticalError):
-            from . import safe_exit
-            safe_exit.error = rv.error
+            from . import _safe_exit
+            _safe_exit.error = rv.error
             resp = str(rv.error)
             type_ = MimeType.CRITICAL_ERROR
         else:

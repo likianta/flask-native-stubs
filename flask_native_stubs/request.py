@@ -2,6 +2,7 @@ import typing as t
 
 from requests import Session as _Session
 
+from .protocol import ExitCode
 from .protocol import WeakError
 from .protocol import serializer
 from .response import MimeType
@@ -65,8 +66,9 @@ class Session:
         elif content_type == MimeType.ERROR:
             text = data.decode(encoding='utf-8')
             print('[RemoteError]', text, ':v4p4')
-            exit(1)  # exit code 1 for WeakError.
-            #   see also [./safe_exit.py : def on_error]
+            exit(ExitCode.WEAK_ERROR)
+            #   see also its catcher at [./delegator.py : def delegate_local
+            #   _call : def delegate : try catch function error : SystemExit]
         elif content_type == MimeType.CRITICAL_ERROR:
             text = data.decode(encoding='utf-8')
             print('[RemoteError]', text, ':v5p4')
@@ -75,8 +77,10 @@ class Session:
             except:
                 pass
             finally:
-                exit(2)  # exit code 2 for CriticalError.
-                #   see also [./safe_exit.py : def on_error]
+                exit(ExitCode.CRITICAL_ERROR)
+                #   see also its catcher at [./delegator.py : def delegate_local
+                #   _call : def delegate : try catch function error :
+                #   SystemExit]
         else:
             raise Exception('Unknown content type: ' + content_type, url)
     

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "flask-native-stubs"
-version = "0.3.0dev0"
+version = "0.3.0dev2"
 description = "Call flask decorated functions like native ones."
 homepage = "https://github.com/likianta/flask-native-stubs"
 readme = "README.md"
@@ -19,5 +19,5 @@ requests = ""
 urllib3 = ""
 
 [build-system]
-requires = ["poetry>=1.0"]
+requires = ["poetry"]
 build-backend = "poetry.masonry.api"

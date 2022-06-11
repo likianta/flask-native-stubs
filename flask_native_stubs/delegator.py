@@ -23,7 +23,15 @@ def delegate_local_call(func: t.Callable):
             args, kwargs = params['args'], params['kwargs']
         
         try:
+            # see also:
+            #   [this file : def delegate_remote_call]
+            #   [./request.py : class Session : def post : how it handles
+            #       MimeType.ERROR and MimeType.CRITICAL_ERROR]
             return Response(func(*args, **kwargs))
+            #   ps: if you are a daemon role. the `func` is actually a function
+            #       in [this file : def delegate_remote_call]. so you can dive
+            #       into [def delegate_remote_call : def delegate :
+            #       session.post] to see what error may it happen.
         except Exception as e:
             if isinstance(e, WeakError):
                 # respond and continue
@@ -32,10 +40,25 @@ def delegate_local_call(func: t.Callable):
                 return Response(WeakError(e))
             else:
                 # respond and exit
-                #   note: the exit mechanism refers to [<~/docs/way-to-exit
-                #   -after-sending-response.zh.mo>]
-                # see also [./_safe_exit.py] for traceback print_exception.
+                #   note: the exit mechanism refers to [~/docs/way-to-exit-after
+                #   -sending-response.zh.mo]
+                # see also [./safe_exit.py] for traceback print_exception.
                 return Response(CriticalError(e))
+        except SystemExit as e2:
+            from .protocol import ExitCode
+            if e2.code == ExitCode.WEAK_ERROR:
+                return Response(WeakError(
+                    'The error is transmitted from server to client by daemon.'
+                    #   server: where i receive this error.
+                    #   client: where i'm going to transmit this error to.
+                    #   daemon: i am the daemon.
+                ))
+            elif e2.code == ExitCode.CRITICAL_ERROR:
+                return Response(CriticalError(
+                    'The error is transmitted from server to client by daemon.'
+                ))
+            else:
+                exit(e2.code)
     
     return delegate
 
