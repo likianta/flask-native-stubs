@@ -36,16 +36,14 @@ def delegate_local_call(func: t.Callable):
             #       into [def delegate_remote_call : def delegate :
             #       session.post] to see what error may it happen.
         except Exception as e:
-            if isinstance(e, WeakError):
-                # respond and continue
+            if isinstance(e, (WeakError, CriticalError)):
+                # note: the exit mechanism refers to [~/docs/way-to-exit-after
+                # -sending-response.zh.mo]
+                # see also [./_safe_exit.py] for traceback print_exception.
                 return Response(e)
             elif _is_expected_error():
                 return Response(WeakError(e))
             else:
-                # respond and exit
-                #   note: the exit mechanism refers to [~/docs/way-to-exit-after
-                #   -sending-response.zh.mo]
-                # see also [./safe_exit.py] for traceback print_exception.
                 return Response(CriticalError(e))
         except SystemExit as e2:
             from .protocol import ExitCode
