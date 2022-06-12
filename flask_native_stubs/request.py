@@ -73,7 +73,7 @@ class Session:
             try:
                 self._session.post(
                     f'{self.url}/--tell-server-im-done',
-                    {'token': info['code']}
+                    serializer.dumps({'token': info['code']})
                 )
             except:
                 pass

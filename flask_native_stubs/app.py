@@ -16,18 +16,28 @@ class FlaskNative(Flask):
     
     def __init__(self, name='flask_native_stubs'):
         super().__init__(name)
-        
+    
     def run(
-        self,
-        host: t.Optional[str] = None,
-        port: t.Optional[int] = None,
-        debug: t.Optional[bool] = None,
-        load_dotenv: bool = True,
-        **options: t.Any,
+            self,
+            host: t.Optional[str] = None,
+            port: t.Optional[int] = None,
+            debug: t.Optional[bool] = None,
+            load_dotenv: bool = True,
+            **options: t.Any,
     ) -> None:
         self.is_running = True
         super().run(host, port, debug, load_dotenv, **options)
         self.is_running = False
+    
+    @staticmethod
+    def shutdown(reason=''):
+        """
+        note: currently i don't find a proper way to force stop flask progress.
+        though i have checked [this answer <https://stackoverflow.com/questions
+        /15562446/how-to-stop-flask-application-without-using-ctrl-c>]. so this
+        method remains 'doing nothing'.
+        """
+        if reason: print(reason)
 
 
 # app = Flask('flask_native_stubs')

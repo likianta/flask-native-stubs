@@ -47,10 +47,14 @@ def _client_is_done(token: str):
     if not error_info:
         raise WeakError('The error stack is not setup.')
     error, code = error_info
+    # print(':v', error, code, token, code == token)
     if token == code:
         from sys import exit
-        from traceback import print_exception
-        print_exception(error)
+        if isinstance(error, Exception):
+            from traceback import print_exception
+            print_exception(error)
+        else:
+            print(':v4', error or '')
         exit(ExitCode.SAFE_EXIT)
     else:
         raise WeakError(f'Invalid token: {token}')

@@ -19,6 +19,7 @@ def delegate_local_call(func: t.Callable):
         assert args == () and kwargs == {}  # note: use `==`, not `is`.
         # ref: https://blog.csdn.net/qq_44862918/article/details/91041637
         if post_data := request.get_data():
+            # print(':v', post_data)
             params = serializer.loads(post_data)
             if tuple(sorted(params.keys())) == ('args', 'kwargs'):
                 args, kwargs = params['args'], params['kwargs']
@@ -59,6 +60,8 @@ def delegate_local_call(func: t.Callable):
                     'The error is transmitted from server to client by daemon.'
                 ))
             else:
+                from .app import app
+                app.shutdown()
                 exit(e2.code)
     
     return delegate
