@@ -7,17 +7,15 @@ from .protocol import WeakError
 from .protocol import serializer
 from .response import MimeType
 
-__all__ = ['session', 'setup']
+__all__ = ['Session', 'session', 'setup']
 
 
 class Session:
     
-    def __init__(self, exception_handle=0):
+    def __init__(self):
         self.host = None
         self.port = None
         self.protocol = 'http'
-        self._exception_handle = exception_handle
-        self._serialize: ...
         self._session = _Session()
     
     def add_cert(self, cert_file: str, disable_warnings=True):
