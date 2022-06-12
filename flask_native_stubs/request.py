@@ -70,10 +70,13 @@ class Session:
             #   see also its catcher at [./delegator.py : def delegate_local
             #   _call : def delegate : try catch function error : SystemExit]
         elif content_type == MimeType.CRITICAL_ERROR:
-            text = data.decode(encoding='utf-8')
-            print('[RemoteError]', text, ':v5p4')
+            info = serializer.loads(data)
+            print('[RemoteError]', info['info'], ':v5p4')
             try:
-                self._session.post(f'{self.url}/--tell-server-im-done')
+                self._session.post(
+                    f'{self.url}/--tell-server-im-done',
+                    {'token': info['code']}
+                )
             except:
                 pass
             finally:

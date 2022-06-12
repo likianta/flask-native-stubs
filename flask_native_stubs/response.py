@@ -30,9 +30,13 @@ class Response(_Response):
             resp = str(rv)
             type_ = MimeType.ERROR
         elif isinstance(rv, CriticalError):
+            from uuid import uuid1
             from . import _safe_exit
-            _safe_exit.error = rv.error
-            resp = str(rv.error)
+            _safe_exit.error_info = (rv.error, (code := str(uuid1())))
+            resp = serializer.dumps({
+                'info': str(rv.error),
+                'code': code
+            })
             type_ = MimeType.CRITICAL_ERROR
         else:
             resp = serializer.dumps(rv)

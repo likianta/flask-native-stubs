@@ -12,4 +12,4 @@ from .stubgen import watch_directory
 # defer init
 from . import _safe_exit
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
