@@ -43,10 +43,10 @@ class FlaskNative(Flask):
         if reason: print(reason)
     
     @staticmethod
-    def generate_stubs(output_dir: str,
+    def generate_stubs(dir_i: str, dir_o: str,
                        filenames_map: dict[str, str] = None):
         from .stubgen import generate_stubs
-        generate_stubs(output_dir, filenames_map)
+        generate_stubs(dir_i, dir_o, filenames_map)
 
 
 # app = Flask('flask_native_stubs')
