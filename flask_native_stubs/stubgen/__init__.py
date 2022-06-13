@@ -13,7 +13,7 @@ workflow:
 """
 from contextlib import contextmanager
 
-from .add_route import add_route
+from .route import magic_route
 from .runtime_stubgen import generate_stub_files
 from .runtime_stubgen import runtime_info_collection
 from ..app import app

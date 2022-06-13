@@ -6,7 +6,7 @@ from inspect import currentframe
 from typing import Callable
 
 
-def add_route(func, path: str = None):
+def magic_route(func, path: str = None):
     delegate = _add_route(func, path)
     last_frame = currentframe().f_back
     last_frame.f_globals[func.__name__] = delegate
