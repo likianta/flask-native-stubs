@@ -1,6 +1,6 @@
 # Flask Native Stubs
 
-- [中文版](README.zh.md)
+[中文版](https://blog.csdn.net/Likianta/article/details/125252446)
 
 Call flask decorated functions like native ones.
 
