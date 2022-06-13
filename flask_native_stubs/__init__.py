@@ -8,11 +8,9 @@ from .protocol import CriticalError
 from .protocol import WeakError
 from .request import session
 from .request import setup as setup_client
-from .stubgen import enable_stubgen
-from .stubgen import generate_stub_files
-from .stubgen import watch_directory
+from .stubgen import generate_stubs
 
 # defer init
 from . import _safe_exit
 
-__version__ = '0.3.1'
+__version__ = '0.4.0'

@@ -52,7 +52,7 @@ def _client_is_done(token: str):
         from sys import exit
         if isinstance(error, Exception):
             from traceback import print_exception
-            print_exception(error)
+            print_exception(error)  # noqa
         else:
             print(':v4', error or '')
         exit(ExitCode.SAFE_EXIT)
