@@ -1,1 +1,2 @@
 SERIALIZATION = 'json'
+STUBGEN_MODE = False

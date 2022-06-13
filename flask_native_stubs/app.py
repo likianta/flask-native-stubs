@@ -5,6 +5,7 @@ from functools import partial
 
 from flask import Flask
 
+from . import config
 from .delegator import delegate_local_call
 
 __all__ = ['app', 'auto_route']
@@ -60,14 +61,18 @@ def auto_route(path=None) -> t.Callable:
         if path is None:
             path = func.__name__.replace('_', '-')
         
-        app.add_url_rule(
-            '/' + path, func.__name__,
-            partial(delegate_local_call(func), _is_local_call=False),
-            methods=('POST',)
-        )
-        
-        from .stubgen import update_runtime_info
-        update_runtime_info(func)
+        if config.STUBGEN_MODE:
+            from .stubgen import update_runtime_info
+            update_runtime_info(func)
+            # for safety consideration, `app.add_url_rule` won't work in
+            # stubgen mode. (otherwise, it may cause a view function endpoint
+            # overwriting error.)
+        else:
+            app.add_url_rule(
+                '/' + path, func.__name__,
+                partial(delegate_local_call(func), _is_local_call=False),
+                methods=('POST',)
+            )
         
         return func
     

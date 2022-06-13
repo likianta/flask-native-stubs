@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import os
 import typing as t
-from collections import defaultdict
 from textwrap import dedent
 
 from .general import normpath
@@ -32,8 +31,15 @@ def generate_stubs(
     return: bool.
         return True for succeed, False for failed.
     """
+    from ..config import STUBGEN_MODE
+    if STUBGEN_MODE is False:
+        print(':v4', 'You have forgot to setup a stubgen mode. Please '
+                     'set `flask_native_stubs.config.STUBGEN_MODE` to '
+                     'True before running `generate_stubs`.')
+        exit(0)
+    
     dir_i, dir_o = map(normpath, (dir_i, dir_o))
-    print(dir_i, dir_o, runtime_info, ':l')
+    # print(dir_i, dir_o, runtime_info, ':l')
     
     if not os.path.exists(dir_o): os.mkdir(dir_o)
     io_map = _build_io_map(dir_i, dir_o, filenames_map)
@@ -60,7 +66,7 @@ def generate_stubs(
                     *(f'{x}: {adapt_type(y)} = {z}'
                       for x, y, z in info['kwargs']),
                 )),
-                info['return'],
+                adapt_type(info['return']),
             ))
         
         with open(file_o, 'w', encoding='utf-8') as f:
@@ -89,8 +95,7 @@ def generate_stubs(
     
     # reset runtime_info
     if reset_runtime_collector:
-        from . import runtime_collector
-        runtime_collector.runtime_info = defaultdict(dict)
+        runtime_info.clear()
     
     return True
 
@@ -138,16 +143,17 @@ def _build_io_map(root_dir_i: str, root_dir_o: str,
                 file_o = path_o
                 new_map[file_i] = file_o
         custom_map = new_map
-    print(':vl', 'The formatted custom map', custom_map)
+    
+    # print(':vl', 'The formatted custom map', custom_map)
     
     # -------------------------------------------------------------------------
-
+    
     def find_common_dir_i() -> str:
         dirs_i = filter(lambda x: x.startswith(root_dir_i),
                         set(map(os.path.dirname, runtime_info)))
         common_dir_i = os.path.commonpath(tuple(dirs_i)).rstrip('/')
         assert common_dir_i == root_dir_i or common_dir_i.startswith(root_dir_i)
-        print(root_dir_i, common_dir_i, root_dir_o, ':l')
+        # print(root_dir_i, common_dir_i, root_dir_o, ':l')
         return common_dir_i
     
     common_dir_i = find_common_dir_i()
@@ -155,7 +161,7 @@ def _build_io_map(root_dir_i: str, root_dir_o: str,
     
     for file_i in runtime_info.keys():
         if not file_i.startswith(root_dir_i + '/'):
-            print('Skip unscoped file', file_i)
+            # print('Skip unscoped file', file_i)
             continue
         if file_i in custom_map:
             file_o = custom_map[file_i]
@@ -163,8 +169,10 @@ def _build_io_map(root_dir_i: str, root_dir_o: str,
             file_o = file_i.replace(common_dir_i, root_dir_o, 1)
         out[file_i] = file_o
     
-    print(':v2l', out)
-    input('continue? ')
+    print(':v2l', 'The complete IO map is:', {
+        k.replace(root_dir_i, '~', 1): v.replace(root_dir_o, '~', 1)
+        for k, v in out.items()
+    })
     
     # create empty directories
     _create_empty_dirs(set(map(os.path.dirname, out.values())))
