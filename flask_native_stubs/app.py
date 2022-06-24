@@ -45,9 +45,10 @@ class FlaskNative(Flask):
     
     @staticmethod
     def generate_stubs(dir_i: str, dir_o: str,
-                       filenames_map: dict[str, str] = None):
+                       custom_map: dict[str, str] = None,
+                       custom_filter: t.Sequence[str] = None):
         from .stubgen import generate_stubs
-        generate_stubs(dir_i, dir_o, filenames_map)
+        generate_stubs(dir_i, dir_o, custom_map, custom_filter)
 
 
 # app = Flask('flask_native_stubs')

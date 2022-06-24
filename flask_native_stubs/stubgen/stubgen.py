@@ -17,13 +17,15 @@ class T:
     _FileOrDirPath = str
     
     CustomMap = dict[_FileOrDirPath, _FileOrDirPath]
+    CustomFilter = t.Sequence[_FileOrDirPath]
     IOMap = dict[_FilePath, _FilePath]
 
 
 def generate_stubs(
         dir_i: str,
         dir_o: str,
-        filenames_map: dict = None,
+        custom_map: dict = None,
+        custom_filter=None,
         add_init_files=True,
         reset_runtime_collector=True,
 ) -> bool:
@@ -33,16 +35,16 @@ def generate_stubs(
     """
     from ..config import STUBGEN_MODE
     if STUBGEN_MODE is False:
-        print(':v4', 'You have forgot to setup a stubgen mode. Please '
-                     'set `flask_native_stubs.config.STUBGEN_MODE` to '
-                     'True before running `generate_stubs`.')
+        print(':v4', 'You forgot to setup stubgen mode. Please set '
+                     '`flask_native_stubs.config.STUBGEN_MODE` to True before '
+                     'running `generate_stubs`.')
         exit(0)
     
     dir_i, dir_o = map(normpath, (dir_i, dir_o))
     # print(dir_i, dir_o, runtime_info, ':l')
     
     if not os.path.exists(dir_o): os.mkdir(dir_o)
-    io_map = _build_io_map(dir_i, dir_o, filenames_map)
+    io_map = _build_io_map(dir_i, dir_o, custom_map, custom_filter)
     
     def adapt_type(t: str) -> str:
         if t == 'any':
@@ -101,13 +103,25 @@ def generate_stubs(
 
 
 def _build_io_map(root_dir_i: str, root_dir_o: str,
-                  custom_map: T.CustomMap = None) -> T.IOMap:
+                  custom_map: T.CustomMap = None,
+                  custom_filter: T.CustomFilter = None) -> T.IOMap:
     """
     args:
-        custom: dict[str path_i, str path_o].
+        custom_map: dict[str path_i, str path_o]
             the path could either be relative or absolute.
             the path could either be a file or a directory.
+        custom_filter: sequence[str relpath, ...]
+            the relpath is against root_dir_i.
     """
+    # normalize custom filter.
+    if custom_filter is None:
+        custom_filter = ()
+    else:
+        custom_filter = tuple(sorted(
+            normpath(os.path.join(root_dir_i, x)) + '/'
+            for x in custom_filter
+        ))
+    
     # reformat custom map.
     if custom_map is None:
         custom_map = {}
@@ -127,6 +141,8 @@ def _build_io_map(root_dir_i: str, root_dir_o: str,
             
             # if path_i is dir (means path_o is also a dir), we add all its
             # children *files* to the map.
+            if (path_i + '/').startswith(custom_filter):
+                continue
             if os.path.isdir(path_i):
                 dir_i = path_i
                 dir_o = path_o
@@ -134,9 +150,13 @@ def _build_io_map(root_dir_i: str, root_dir_o: str,
                 for root, dirs, files in os.walk(dir_i):
                     sub_dir_i = normpath(root)
                     sub_dir_o = sub_dir_i.replace(dir_i, dir_o, 1)
+                    if (sub_dir_i + '/').startswith(custom_filter):
+                        continue
                     for name in files:
                         file_i = f'{sub_dir_i}/{name}'
                         file_o = f'{sub_dir_o}/{name}'
+                        if (file_i + '/').startswith(custom_filter):
+                            continue
                         new_map[file_i] = file_o
             else:
                 file_i = path_i
@@ -145,6 +165,7 @@ def _build_io_map(root_dir_i: str, root_dir_o: str,
         custom_map = new_map
     
     # print(':vl', 'The formatted custom map', custom_map)
+    del custom_filter
     
     # -------------------------------------------------------------------------
     
