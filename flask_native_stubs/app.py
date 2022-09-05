@@ -5,21 +5,36 @@ from functools import partial
 
 from flask import Flask
 
-from . import config
 from .delegator import delegate_local_call
 
 __all__ = ['app', 'auto_route']
 
 
 class FlaskNative(Flask):
+    collected_paths: set
     is_running = False
     
     def __init__(self, name='flask_native_stubs'):
         super().__init__(name)
+        self.collected_paths = set()
     
     @staticmethod
     def auto_route(path=None) -> t.Callable:
         return auto_route(path)
+    
+    def add_url_rule(
+            self,
+            rule: str,
+            endpoint: str = None,
+            view_func: t.Optional[t.Callable] = None,
+            provide_automatic_options: t.Optional[bool] = None,
+            **options: t.Any,
+    ) -> None:
+        super().add_url_rule(
+            rule, endpoint, view_func,
+            provide_automatic_options, **options
+        )
+        self.collected_paths.add(rule)
     
     def run(
             self,
@@ -55,25 +70,29 @@ class FlaskNative(Flask):
 app = FlaskNative()
 
 
-def auto_route(path=None) -> t.Callable:
-    # note: param `path` should not add leading '/'.
+def auto_route(path: str = None) -> t.Callable:
+    """
+    note: param `path` must start with '/'.
+    """
+    assert path is None or path.startswith('/')
+    
     def decorator(func):
         nonlocal path
         if path is None:
-            path = func.__name__.replace('_', '-')
+            path = '/' + func.__name__.replace('_', '-')
         
-        if config.STUBGEN_MODE:
-            from .stubgen import update_runtime_info
-            update_runtime_info(func)
-            # for safety consideration, `app.add_url_rule` won't work in
-            # stubgen mode. (otherwise, it may cause a view function endpoint
-            # overwriting error.)
-        else:
-            app.add_url_rule(
-                '/' + path, func.__name__,
-                partial(delegate_local_call(func), _is_local_call=False),
-                methods=('POST',)
-            )
+        # stubgen recording
+        from .stubgen import update_runtime_info
+        update_runtime_info(func)
+        
+        if path in app.collected_paths:
+            raise Exception(f'path ("{path}") already registered!')
+        
+        app.add_url_rule(
+            path, func.__name__,
+            partial(delegate_local_call(func), _is_native_call=False),
+            methods=('POST',)
+        )
         
         return func
     

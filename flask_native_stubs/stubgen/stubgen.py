@@ -30,16 +30,11 @@ def generate_stubs(
         reset_runtime_collector=True,
 ) -> bool:
     """
+    args:
+        dir_o: if not exists, will be created. (max creation depth is 1)
     return: bool.
         return True for succeed, False for failed.
     """
-    from ..config import STUBGEN_MODE
-    if STUBGEN_MODE is False:
-        print(':v4', 'You forgot to setup stubgen mode. Please set '
-                     '`flask_native_stubs.config.STUBGEN_MODE` to True before '
-                     'running `generate_stubs`.')
-        exit(0)
-    
     dir_i, dir_o = map(normpath, (dir_i, dir_o))
     # print(dir_i, dir_o, runtime_info, ':l')
     

@@ -13,4 +13,4 @@ from .stubgen import generate_stubs
 # defer init
 from . import _safe_exit
 
-__version__ = '0.4.0'
+__version__ = '0.4.1'

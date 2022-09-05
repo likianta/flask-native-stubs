@@ -1,2 +1,2 @@
 SERIALIZATION = 'json'
-STUBGEN_MODE = False
+# STUBGEN_MODE = False
