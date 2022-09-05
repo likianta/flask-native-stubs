@@ -15,8 +15,8 @@ class FlaskNative(Flask):
     is_running = False
     
     def __init__(self, name='flask_native_stubs'):
-        super().__init__(name)
         self.collected_paths = set()
+        super().__init__(name)
     
     @staticmethod
     def auto_route(path=None) -> t.Callable:
@@ -91,7 +91,7 @@ def auto_route(path: str = None) -> t.Callable:
         app.add_url_rule(
             path, func.__name__,
             partial(delegate_local_call(func), _is_native_call=False),
-            methods=('POST',)
+            methods=('POST', 'GET')
         )
         
         return func

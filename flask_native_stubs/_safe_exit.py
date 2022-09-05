@@ -41,7 +41,7 @@ def on_error(func, args=(), kwargs=None, scheme: t.Literal[
             raise ValueError(scheme)
 
 
-@auto_route('--tell-server-im-done')
+@auto_route('/--tell-server-im-done')
 def _client_is_done(token: str):
     global error_info
     if not error_info:
