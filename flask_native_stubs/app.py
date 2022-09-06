@@ -5,7 +5,7 @@ from functools import partial
 
 from flask import Flask
 
-from .delegator import delegate_local_call
+from .delegator import delegate_native_call
 
 __all__ = ['app', 'auto_route']
 
@@ -90,7 +90,7 @@ def auto_route(path: str = None) -> t.Callable:
         
         app.add_url_rule(
             path, func.__name__,
-            partial(delegate_local_call(func), _is_native_call=False),
+            partial(delegate_native_call(func), _is_native_call=False),
             methods=('POST', 'GET')
         )
         

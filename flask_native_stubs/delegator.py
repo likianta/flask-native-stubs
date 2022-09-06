@@ -9,7 +9,7 @@ from .protocol import serializer
 from .response import Response
 
 
-def delegate_local_call(func: t.Callable):
+def delegate_native_call(func: t.Callable):
     @wraps(func)
     def delegate(*args, _is_native_call=True, **kwargs):
         if _is_native_call:

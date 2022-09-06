@@ -54,9 +54,12 @@ def parse_function(func, fallback_type: T.FallbackType = 'any') -> T.FuncInfo:
     else:
         arg_names = param_names
     for name in arg_names:
-        args.append(
-            (name, type_2_str.get(annotations.get(name, str), 'any'))
-        )
+        if name in annotations:
+            type_ = annotations[name]
+            type_str = type_2_str.get(type_, str(type_))
+        else:
+            type_str = fallback_type
+        args.append((name, type_str))
     
     kwargs = []
     if kw_defaults:
@@ -66,18 +69,25 @@ def parse_function(func, fallback_type: T.FallbackType = 'any') -> T.FuncInfo:
             )
         for name, value in kw_defaults.items():
             if name in annotations:
-                type_ = type_2_str.get(annotations[name], fallback_type)
+                type_ = annotations[name]
+                type_str = type_2_str.get(type_, str(type_))
             else:
-                type_ = _deduce_param_type_by_default_value(value)
-            kwargs.append((name, type_, value))
+                type_str = _deduce_param_type_by_default_value(value)
+            kwargs.append((name, type_str, value))
     
-    result = type_2_str.get(annotations.get('return', None), 'any')
+    if 'return' in annotations:
+        type_ = annotations['return']
+        type_str = type_2_str.get(type_, str(type_))
+        # print(type_, type_str, ':v')
+    else:
+        type_str = type_2_str[None]
+    return_ = type_str
     
     return {
         'name'  : func_name,
         'args'  : args,
         'kwargs': kwargs,
-        'return': result,
+        'return': return_,
     }
 
 
