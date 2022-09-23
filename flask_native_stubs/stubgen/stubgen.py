@@ -208,7 +208,7 @@ def _create_empty_dirs(dirs: t.Iterable[str]):
 def _add_init_files(output_dir: str):
     for root, dirs, files in os.walk(output_dir):
         # print(root, dirs, files)
-        if root.startswith(('__', '.')):
+        if os.path.basename(root).startswith(('__', '.')):
             continue
         modules = (x[:-3] for x in files
                    if x.endswith('.py')
