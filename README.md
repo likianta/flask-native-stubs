@@ -95,6 +95,10 @@ demo
         main()
     ```
 
+## More examples
+
+Please go to "~/examples" folder, follow "~/examples/readme.md" to run them.
+
 ## How it works
 
 This project is inspired by swagger codegen.
