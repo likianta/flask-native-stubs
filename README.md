@@ -97,7 +97,7 @@ demo
 
 ## More examples
 
-Please go to "~/examples" folder, follow "~/examples/readme.md" to run them.
+Please go to `examples` folder, follow `examples/readme.md` to run them.
 
 ## How it works
 
