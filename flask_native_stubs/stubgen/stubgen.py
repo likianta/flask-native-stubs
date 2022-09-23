@@ -5,7 +5,6 @@ usage: `~/docs/how-to-generate-python-stub-files-(pyi).zh.md`.
 from __future__ import annotations
 
 import os
-import posixpath
 import typing as t
 from textwrap import dedent
 
@@ -76,8 +75,10 @@ def generate_stubs(
                 """
                 from __future__ import annotations
                 
-                from flask_native_stubs.stubgen import magic_route
+                import typing as t
                 from typing import Any
+                
+                from flask_native_stubs.stubgen import magic_route
                 
                 {functions}
                 
@@ -168,9 +169,12 @@ def _build_io_map(root_dir_i: str, root_dir_o: str,
     def find_common_dir_i() -> str:
         dirs_i = filter(lambda x: x.startswith(root_dir_i),
                         set(map(os.path.dirname, runtime_info)))
-        common_dir_i = posixpath.commonpath(tuple(dirs_i)).rstrip('/')
-        # print(root_dir_i, common_dir_i, ':l')
-        assert common_dir_i == root_dir_i or common_dir_i.startswith(root_dir_i)
+        common_dir_i = normpath(os.path.commonpath(tuple(dirs_i)))
+        assert common_dir_i == root_dir_i \
+               or common_dir_i.startswith(root_dir_i), (
+            common_dir_i, root_dir_i, root_dir_o
+        )
+        # print(root_dir_i, common_dir_i, root_dir_o, ':l')
         return common_dir_i
     
     common_dir_i = find_common_dir_i()
