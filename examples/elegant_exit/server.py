@@ -1,17 +1,21 @@
-import lk_logger
-
 from flask_native_stubs import CriticalError
+from flask_native_stubs import WeakError
 from flask_native_stubs import app
-from flask_native_stubs import auto_route
 
-lk_logger.setup(show_varnames=True)
+# be noticed: both CriticalError and WeakError will be translated to SystemExit
+#   to client side.
 
 
-@auto_route()
-def hello_world(a, b, c: int):
-    print(a, b, c)
-    if c < 0:
+@app.auto_route()
+def make_an_error(severity: int) -> str:
+    print(severity)
+    if severity == 0:
+        return 'no error happens'
+    elif severity == 1:
+        raise WeakError('there is a weak error')
+    else:
         raise CriticalError('a critical error...')
 
 
-app.run('127.0.0.1', 8081)
+if __name__ == '__main__':
+    app.run('127.0.0.1', 5001)
