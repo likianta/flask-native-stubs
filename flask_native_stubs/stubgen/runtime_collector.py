@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing as t
 from collections import defaultdict
 
 from .func_parser import parse_function
@@ -12,7 +13,7 @@ class T:
     _FilePath = str
     _FuncName = str
     
-    RuntimeInfo = dict[_FilePath, dict[_FuncName, TFuncInfo]]
+    RuntimeInfo = t.Dict[_FilePath, t.Dict[_FuncName, TFuncInfo]]
 
 
 runtime_info: T.RuntimeInfo = defaultdict(dict)

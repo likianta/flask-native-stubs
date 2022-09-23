@@ -5,6 +5,7 @@ usage: `~/docs/how-to-generate-python-stub-files-(pyi).zh.md`.
 from __future__ import annotations
 
 import os
+import posixpath
 import typing as t
 from textwrap import dedent
 
@@ -16,9 +17,9 @@ class T:
     _FilePath = str
     _FileOrDirPath = str
     
-    CustomMap = dict[_FileOrDirPath, _FileOrDirPath]
+    CustomMap = t.Dict[_FileOrDirPath, _FileOrDirPath]
     CustomFilter = t.Sequence[_FileOrDirPath]
-    IOMap = dict[_FilePath, _FilePath]
+    IOMap = t.Dict[_FilePath, _FilePath]
 
 
 def generate_stubs(
@@ -106,7 +107,7 @@ def _build_io_map(root_dir_i: str, root_dir_o: str,
             the path could either be relative or absolute.
             the path could either be a file or a directory.
         custom_filter: sequence[str relpath, ...]
-            the relpath is against root_dir_i.
+            the relpath against root_dir_i.
     """
     # normalize custom filter.
     if custom_filter is None:
@@ -167,9 +168,9 @@ def _build_io_map(root_dir_i: str, root_dir_o: str,
     def find_common_dir_i() -> str:
         dirs_i = filter(lambda x: x.startswith(root_dir_i),
                         set(map(os.path.dirname, runtime_info)))
-        common_dir_i = os.path.commonpath(tuple(dirs_i)).rstrip('/')
+        common_dir_i = posixpath.commonpath(tuple(dirs_i)).rstrip('/')
+        # print(root_dir_i, common_dir_i, ':l')
         assert common_dir_i == root_dir_i or common_dir_i.startswith(root_dir_i)
-        # print(root_dir_i, common_dir_i, root_dir_o, ':l')
         return common_dir_i
     
     common_dir_i = find_common_dir_i()
