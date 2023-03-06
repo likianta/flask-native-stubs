@@ -43,15 +43,13 @@ class Session:
         #   `~.split(';')[0]`: e.g. 'text/html; charset=utf-8' -> 'text/html'
         
         if resp.status_code >= 400:
-            print(':v4p4', f'HTTP status code error: {resp.status_code}', data)
+            print(':v4sp2', f'HTTP status code error: {resp.status_code}', data)
             #     ~~~~^^~
             ''' print(':p?', ...): this is featured by [lib:lk-logger].
                 here is a simple illustration:
                     p0: self (current frame)
-                    p1: ./delegator.py : def delegate_remote_call
-                    p2: ./stubgen/add_route.py : def _add_route
-                    p3: ./stubgen/add_route.py : def add_route
-                    p4: real caller
+                    p1: ./delegator.py : def delegate_remote_call : def delegate
+                    p2: real caller
             '''
             exit(1)
         
@@ -63,13 +61,13 @@ class Session:
             return serializer.loads(data)
         elif content_type == MimeType.ERROR:
             text = data.decode(encoding='utf-8')
-            print('[RemoteError]', text, ':v4p4')
+            print('[RemoteError]', text, ':v4sp2')
             exit(ExitCode.WEAK_ERROR)
             #   see also its catcher at [./delegator.py : def delegate_local
             #   _call : def delegate : try catch function error : SystemExit]
         elif content_type == MimeType.CRITICAL_ERROR:
             info = serializer.loads(data)
-            print('[RemoteError]', info['info'], ':v5p4')
+            print('[RemoteError]', info['info'], ':v4sp2')
             try:
                 self._session.post(
                     f'{self.url}/--tell-server-im-done',
@@ -89,7 +87,7 @@ class Session:
     def url(self) -> str:
         if self.host is None:
             print('[flask_native_stubs] You forgot calling '
-                  '`flask_native_stubs.setup(...)` at the startup!', ':v4p5')
+                  '`flask_native_stubs.setup(...)` at the startup!', ':v4sp3')
             exit(1)
         return f'{self.protocol}://{self.host}:{self.port}'
     
