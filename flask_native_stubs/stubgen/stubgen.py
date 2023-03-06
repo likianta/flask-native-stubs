@@ -75,18 +75,20 @@ def generate_stubs(
                 """
                 from __future__ import annotations
                 
-                import typing as t
-                from typing import Any
+                import typing as t  # noqa
+                from typing import Any  # noqa
                 
                 from flask_native_stubs.stubgen import magic_route
                 
+                
                 {functions}
+                
                 
                 [magic_route(x) for x in (
                     {function_names},
                 )]
             ''').lstrip().format(
-                functions='\n\n'.join(function_defs),
+                functions='\n\n\n'.join(function_defs),
                 function_names=indent(
                     ',\n'.join(function_names),
                     ' ' * 4,
