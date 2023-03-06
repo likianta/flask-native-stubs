@@ -7,6 +7,7 @@ from __future__ import annotations
 import os
 import typing as t
 from textwrap import dedent
+from textwrap import indent
 
 from .general import normpath
 from .runtime_collector import runtime_info
@@ -70,7 +71,6 @@ def generate_stubs(
             f.write(dedent('''
                 """
                 Auto-generated stub file by [flask-native-stubs][1].
-                
                 [1]: https://github.com/likianta/flask-native-stubs
                 """
                 from __future__ import annotations
@@ -82,10 +82,15 @@ def generate_stubs(
                 
                 {functions}
                 
-                [magic_route(x) for x in ({function_names},)]
+                [magic_route(x) for x in (
+                    {function_names},
+                )]
             ''').lstrip().format(
                 functions='\n\n'.join(function_defs),
-                function_names=', '.join(function_names),
+                function_names=indent(
+                    ',\n'.join(function_names),
+                    ' ' * 4,
+                ).lstrip(),
             ))
         print(f'File generated: {file_o}')
     
@@ -190,8 +195,8 @@ def _build_io_map(root_dir_i: str, root_dir_o: str,
             file_o = file_i.replace(common_dir_i, root_dir_o, 1)
         out[file_i] = file_o
     
-    print(':v2l', 'The complete IO map is:', {
-        k.replace(root_dir_i, '~', 1): v.replace(root_dir_o, '~', 1)
+    print(':v2sl', 'The complete IO map is:', {
+        k.replace(root_dir_i, '<IN>', 1): v.replace(root_dir_o, '<OUT>', 1)
         for k, v in out.items()
     })
     
