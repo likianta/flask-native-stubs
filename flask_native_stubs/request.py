@@ -1,4 +1,5 @@
 import typing as t
+from sys import exit
 
 from requests import Session as _Session
 
