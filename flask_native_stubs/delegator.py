@@ -9,7 +9,12 @@ from .protocol import serializer
 from .response import Response
 
 
-def delegate_native_call(func: t.Callable):
+class T:
+    NativeFunc = t.TypeVar('NativeFunc', bound=t.Callable)
+    RemoteFunc = t.TypeVar('RemoteFunc', bound=t.Callable)
+
+
+def delegate_native_call(func: T.NativeFunc) -> T.NativeFunc:
     @wraps(func)
     def delegate(*args, _is_native_call=True, **kwargs):
         if _is_native_call:
@@ -75,10 +80,10 @@ def _is_expected_error() -> bool:
     return bool(trace()[1][4][0].lstrip().startswith('raise '))
 
 
-def delegate_remote_call(path: str):
+def delegate_remote_call(path: str) -> T.RemoteFunc:
     from .request import session
     
-    def delegate(*args, **kwargs):
+    def delegate(*args, **kwargs) -> t.Any:
         return session.post(path, {
             'args': args, 'kwargs': kwargs,
         })

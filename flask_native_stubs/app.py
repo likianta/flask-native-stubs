@@ -2,12 +2,21 @@ from __future__ import annotations
 
 import typing as t
 from functools import partial
+from functools import wraps
 
 from flask import Flask
 
+from . import config
+from .delegator import T as T0
 from .delegator import delegate_native_call
+from .delegator import delegate_remote_call
+from .stubgen import update_runtime_info
 
 __all__ = ['app', 'auto_route']
+
+
+class T(T0):
+    pass
 
 
 class FlaskNative(Flask):
@@ -19,7 +28,7 @@ class FlaskNative(Flask):
         super().__init__(name)
     
     @staticmethod
-    def auto_route(path=None) -> t.Callable:
+    def auto_route(path=None) -> t.Union[T.NativeFunc, T.RemoteFunc]:
         return auto_route(path)
     
     def add_url_rule(
@@ -36,6 +45,12 @@ class FlaskNative(Flask):
         )
         self.collected_paths.add(rule)
     
+    @staticmethod
+    def simulate_client(host: str, port: int) -> None:
+        from .request import setup_client
+        config.RUNNING_MODE = 'client'
+        setup_client(host, port)
+    
     def run(
             self,
             host: t.Optional[str] = None,
@@ -49,7 +64,7 @@ class FlaskNative(Flask):
         self.is_running = False
     
     @staticmethod
-    def shutdown(reason=''):
+    def shutdown(reason='') -> None:
         """
         note: currently i don't find a proper way to force stop flask progress.
         though i have checked [this answer <https://stackoverflow.com/questions
@@ -61,28 +76,26 @@ class FlaskNative(Flask):
     @staticmethod
     def generate_stubs(dir_i: str, dir_o: str,
                        custom_map: dict[str, str] = None,
-                       custom_filter: t.Sequence[str] = None):
+                       custom_filter: t.Sequence[str] = None) -> None:
         from .stubgen import generate_stubs
         generate_stubs(dir_i, dir_o, custom_map, custom_filter)
 
 
-# app = Flask('flask_native_stubs')
 app = FlaskNative()
 
 
-def auto_route(path: str = None) -> t.Callable:
+def auto_route(path: str = None) -> t.Union[T.NativeFunc, T.RemoteFunc]:
     """
     note: param `path` must start with '/'.
     """
     assert path is None or path.startswith('/')
     
-    def decorator(func):
+    def decorator(func: T.NativeFunc) -> T.NativeFunc:
         nonlocal path
         if path is None:
             path = '/' + func.__name__.replace('_', '-')
         
         # stubgen recording
-        from .stubgen import update_runtime_info
         update_runtime_info(func)
         
         if path in app.collected_paths:
@@ -94,6 +107,13 @@ def auto_route(path: str = None) -> t.Callable:
             methods=('POST', 'GET')
         )
         
-        return func
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> t.Any:
+            if config.RUNNING_MODE == 'server':
+                return func(*args, **kwargs)
+            else:
+                return delegate_remote_call(path.lstrip('/'))(*args, **kwargs)
+        
+        return wrapper
     
     return decorator

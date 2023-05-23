@@ -8,7 +8,7 @@ from .protocol import WeakError
 from .protocol import serializer
 from .response import MimeType
 
-__all__ = ['Session', 'session', 'setup']
+__all__ = ['Session', 'session', 'setup_client']
 
 
 class Session:
@@ -117,7 +117,7 @@ class Session:
 session = Session()
 
 
-def setup(host: str, port: int, protocol='http', cert_file: str = ''):
+def setup_client(host: str, port: int, protocol='http', cert_file: str = ''):
     global session
     session.host = host
     session.port = port

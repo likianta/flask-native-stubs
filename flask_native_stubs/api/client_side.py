@@ -3,7 +3,7 @@ from ..protocol import CriticalError
 from ..protocol import WeakError
 from ..request import Session
 from ..request import session
-from ..request import setup
+from ..request import setup_client
 
 __all__ = [
     'CriticalError',
@@ -11,5 +11,5 @@ __all__ = [
     'WeakError',
     'config',
     'session',
-    'setup',
+    'setup_client',
 ]
