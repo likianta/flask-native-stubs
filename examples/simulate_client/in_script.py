@@ -24,6 +24,6 @@ def hello(name: str) -> int:
 
 
 if __name__ == '__main__':
-    # py examples/simulate_client/both_server_and_client.py server
-    # py examples/simulate_client/both_server_and_client.py client
+    # proc1: py examples/simulate_client/in_script.py server
+    # proc2: py examples/simulate_client/in_script.py client
     cli.run(main)

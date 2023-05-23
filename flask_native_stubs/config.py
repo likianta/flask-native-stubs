@@ -12,7 +12,8 @@ RUNNING_MODE: T.RunningMode = getenv('FLASK_NATIVE_RUNNING_MODE', 'server')
 SERIALIZATION: T.Serialization = 'json'
 
 if RUNNING_MODE == 'client':
-    print('change running mode to "client" by environmental setting', ':pv2s')
+    print('[cyan dim]change flask-native-stubs running mode to "client" '
+          'by environmental setting[/]', ':rs')
     from random import randint
     from .request import setup_client
     setup_client(
