@@ -3,10 +3,13 @@ from typing import Literal
 
 
 class T:
-    RunningMode = Literal['server', 'client']
+    Protocol = Literal['http', 'https', 'websocket']
+    RunningMode = Literal['client', 'server']
     Serialization = Literal['json', 'pickle']
 
 
+# TODO: not implemented in this version.
+PROTOCOL: T.Protocol = 'http'
 # noinspection PyTypeChecker
 RUNNING_MODE: T.RunningMode = getenv('FLASK_NATIVE_RUNNING_MODE', 'server')
 SERIALIZATION: T.Serialization = 'json'

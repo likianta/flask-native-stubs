@@ -4,8 +4,6 @@ source: https://github.com/likianta/argsense-cli
 """
 import typing as t
 
-__all__ = ['parse_function', 'TFuncInfo']
-
 
 class T:
     _ParamName = str
@@ -103,6 +101,3 @@ def _deduce_param_type_by_default_value(default: t.Any) -> T.ParamType:
         tuple: 'tuple',
     }
     return dict_.get(type(default), 'any')
-
-
-TFuncInfo = T.FuncInfo
