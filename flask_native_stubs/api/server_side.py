@@ -1,7 +1,8 @@
-from .. import config
 from .. import stubgen
 from ..app import app
 from ..app import auto_route
+from ..config import cfg
+from ..config import setup as setup_server
 from ..protocol import CriticalError
 from ..protocol import WeakError
 
@@ -10,6 +11,7 @@ __all__ = [
     'WeakError',
     'app',
     'auto_route',
-    'config',
+    'cfg',
+    'setup_server',
     'stubgen',
 ]

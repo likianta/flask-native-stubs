@@ -1,4 +1,3 @@
-from os import getenv
 from typing import Literal
 
 
@@ -8,18 +7,39 @@ class T:
     Serialization = Literal['json', 'pickle']
 
 
-# TODO: not implemented in this version.
-PROTOCOL: T.Protocol = 'http'
-# noinspection PyTypeChecker
-RUNNING_MODE: T.RunningMode = getenv('FLASK_NATIVE_RUNNING_MODE', 'server')
-SERIALIZATION: T.Serialization = 'json'
+class _Config:
+    protocol: T.Protocol = 'http'  # TODO
+    running_mode: T.RunningMode = 'client'
+    serialization: T.Serialization = 'json'
+    
+    host: str
+    port: int
 
-if RUNNING_MODE == 'client':
-    print('[cyan dim]change flask-native-stubs running mode to "client" '
-          'by environmental setting[/]', ':rs')
-    from random import randint
-    from .request import setup_client
-    setup_client(
-        host=getenv('FLASK_NATIVE_HOST', 'localhost'),
-        port=int(getenv('FLASK_NATIVE_PORT', randint(5000, 65535)))
-    )
+
+cfg = _Config()
+
+
+def setup(
+    host: str,
+    port: int,
+    protocol: T.Protocol = None,
+    cert_file: str = None
+) -> None:
+    from .request import session
+    
+    cfg.host = host
+    cfg.port = port
+    
+    session.host = host
+    session.port = port
+    
+    if cert_file and protocol and protocol != 'https':
+        print(
+            'warn: if cert_file is given, the protocol will be '
+            'forcely set to "https"'
+        )
+        protocol = 'https'
+    if protocol:
+        session.protocol = protocol
+    if cert_file:
+        session.add_cert(cert_file)

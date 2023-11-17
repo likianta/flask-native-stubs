@@ -8,7 +8,7 @@ from .protocol import WeakError
 from .protocol import serializer
 from .response import MimeType
 
-__all__ = ['Session', 'session', 'setup_client']
+__all__ = ['Session', 'session']
 
 
 class Session:
@@ -33,7 +33,7 @@ class Session:
         self._session.verify = cert_file
         if disable_warnings:
             import urllib3
-            from urllib3.exceptions import SubjectAltNameWarning
+            from urllib3.exceptions import SubjectAltNameWarning  # noqa
             urllib3.disable_warnings(SubjectAltNameWarning)
     
     def post(self, path: str, params: dict = None) -> t.Any:
@@ -115,14 +115,3 @@ class Session:
 
 
 session = Session()
-
-
-def setup_client(host: str, port: int, protocol='http', cert_file: str = ''):
-    global session
-    session.host = host
-    session.port = port
-    session.protocol = protocol
-    if cert_file:
-        # warning: if cer_file is given, the protocol will be forcely changed
-        #   to 'https'.
-        session.add_cert(cert_file)

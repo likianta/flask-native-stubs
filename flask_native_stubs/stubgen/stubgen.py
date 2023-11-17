@@ -23,12 +23,12 @@ class T:
 
 
 def generate_stubs(
-        dir_i: str,
-        dir_o: str,
-        custom_map: dict = None,
-        custom_filter=None,
-        add_init_files=True,
-        reset_runtime_collector=True,
+    dir_i: str,
+    dir_o: str,
+    custom_map: dict = None,
+    custom_filter=None,
+    add_init_files=True,
+    reset_runtime_collector=True,
 ) -> bool:
     """
     args:
@@ -174,11 +174,15 @@ def _build_io_map(root_dir_i: str, root_dir_o: str,
     # -------------------------------------------------------------------------
     
     def find_common_dir_i() -> str:
-        dirs_i = filter(lambda x: x.startswith(root_dir_i),
-                        set(map(os.path.dirname, runtime_info)))
+        dirs_i = filter(
+            lambda x: x.startswith(root_dir_i),
+            set(map(os.path.dirname, runtime_info))
+        )
         common_dir_i = normpath(os.path.commonpath(tuple(dirs_i)))
-        assert common_dir_i == root_dir_i \
-               or common_dir_i.startswith(root_dir_i), (
+        assert (
+            common_dir_i == root_dir_i or
+            common_dir_i.startswith(root_dir_i)
+        ), (
             common_dir_i, root_dir_i, root_dir_o
         )
         # print(root_dir_i, common_dir_i, root_dir_o, ':l')
@@ -203,6 +207,7 @@ def _build_io_map(root_dir_i: str, root_dir_o: str,
     })
     
     # create empty directories
+    # noinspection PyTypeChecker
     _create_empty_dirs(set(map(os.path.dirname, out.values())))
     
     return out

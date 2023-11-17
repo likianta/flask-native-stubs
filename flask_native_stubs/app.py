@@ -6,7 +6,7 @@ from functools import wraps
 
 from flask import Flask
 
-from . import config
+from .config import cfg
 from .delegator import T as T0
 from .delegator import delegate_native_call
 from .delegator import delegate_remote_call
@@ -21,10 +21,11 @@ class T(T0):
 
 class FlaskNative(Flask):
     collected_paths: set
-    is_running = False
+    is_running: bool
     
     def __init__(self, name='flask_native_stubs'):
         self.collected_paths = set()
+        self.is_running = False
         super().__init__(name)
     
     @staticmethod
@@ -32,12 +33,12 @@ class FlaskNative(Flask):
         return auto_route(path)
     
     def add_url_rule(
-            self,
-            rule: str,
-            endpoint: str = None,
-            view_func: t.Optional[t.Callable] = None,
-            provide_automatic_options: t.Optional[bool] = None,
-            **options: t.Any,
+        self,
+        rule: str,
+        endpoint: str = None,
+        view_func: t.Optional[t.Callable] = None,
+        provide_automatic_options: t.Optional[bool] = None,
+        **options: t.Any,
     ) -> None:
         super().add_url_rule(
             rule, endpoint, view_func,
@@ -45,23 +46,19 @@ class FlaskNative(Flask):
         )
         self.collected_paths.add(rule)
     
-    @staticmethod
-    def simulate_client(host: str, port: int) -> None:
-        from .request import setup_client
-        config.RUNNING_MODE = 'client'
-        setup_client(host, port)
-    
     def run(
-            self,
-            host: t.Optional[str] = None,
-            port: t.Optional[int] = None,
-            debug: t.Optional[bool] = None,
-            load_dotenv: bool = True,
-            **options: t.Any,
+        self,
+        host: t.Optional[str] = None,
+        port: t.Optional[int] = None,
+        debug: t.Optional[bool] = None,
+        load_dotenv: bool = True,
+        **options: t.Any,
     ) -> None:
+        cfg.running_mode = 'server'
         self.is_running = True
         super().run(host, port, debug, load_dotenv, **options)
         self.is_running = False
+        cfg.running_mode = 'client'
     
     @staticmethod
     def shutdown(reason='') -> None:
@@ -109,7 +106,7 @@ def auto_route(path: str = None) -> t.Union[T.NativeFunc, T.RemoteFunc]:
         
         @wraps(func)
         def wrapper(*args, **kwargs) -> t.Any:
-            if config.RUNNING_MODE == 'server':
+            if cfg.running_mode == 'server':
                 return func(*args, **kwargs)
             else:
                 return delegate_remote_call(path.lstrip('/'))(*args, **kwargs)
