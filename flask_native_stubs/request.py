@@ -3,6 +3,7 @@ from sys import exit
 
 from requests import Session as _Session
 
+from .config import cfg
 from .protocol import ExitCode
 from .protocol import WeakError
 from .protocol import serializer
@@ -14,8 +15,8 @@ __all__ = ['Session', 'session']
 class Session:
     
     def __init__(self):
-        self.host = None
-        self.port = None
+        self.host = cfg.host
+        self.port = cfg.port
         self.protocol = 'http'
         self._session = _Session()
     
@@ -86,10 +87,6 @@ class Session:
     
     @property
     def url(self) -> str:
-        if self.host is None:
-            print('[flask_native_stubs] You forgot calling '
-                  '`flask_native_stubs.setup(...)` at the startup!', ':v4sp3')
-            exit(1)
         return f'{self.protocol}://{self.host}:{self.port}'
     
     @staticmethod  # DELETE: not used any more.

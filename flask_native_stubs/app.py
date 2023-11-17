@@ -21,7 +21,7 @@ class T(T0):
 
 class FlaskNative(Flask):
     collected_paths: set
-    is_running: bool
+    is_running: bool  # DELETE?
     
     def __init__(self, name='flask_native_stubs'):
         self.collected_paths = set()
@@ -48,20 +48,19 @@ class FlaskNative(Flask):
     
     def run(
         self,
-        host: t.Optional[str] = None,
-        port: t.Optional[int] = None,
-        debug: t.Optional[bool] = None,
-        load_dotenv: bool = True,
-        **options: t.Any,
+        host: str = None,
+        port: int = None,
+        debug: bool = False,
+        **kwargs: t.Any,
     ) -> None:
         cfg.running_mode = 'server'
         self.is_running = True
-        super().run(host, port, debug, load_dotenv, **options)
+        super().run(host or cfg.host, port or cfg.port, debug, **kwargs)
         self.is_running = False
         cfg.running_mode = 'client'
     
     @staticmethod
-    def shutdown(reason='') -> None:
+    def shutdown(reason: str = '') -> None:
         """
         note: currently i don't find a proper way to force stop flask progress.
         though i have checked [this answer <https://stackoverflow.com/questions

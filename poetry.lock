@@ -342,6 +342,20 @@ url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 reference = "tsinghua"
 
 [[package]]
+name = "pysignal"
+version = "0.1.2a0"
+description = ""
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "pysignal-0.1.2a0-py3-none-any.whl", hash = "sha256:7a621a49d87757e45752f6d42fd4b0f247a50a8c7643279dc56cac77091bea4e"},
+]
+
+[package.source]
+type = "url"
+url = "http://likianta.pro:2006/pysignal/pysignal-0.1.2a0-py3-none-any.whl"
+
+[[package]]
 name = "requests"
 version = "2.31.0"
 description = "Python HTTP for Humans."
@@ -433,4 +447,4 @@ reference = "tsinghua"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "ad619aaaa5a8a2acabf04b9beb3948ca032eb67f1bf04cacd52ba10822a60581"
+content-hash = "ef01d265e207a8ce549ed2a4969071f0fe0adb91d59e832db4a4e0369f086f7c"

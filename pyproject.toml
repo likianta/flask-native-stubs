@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "flask-native-stubs"
-version = "0.5.0a1"
+version = "0.5.0a4"
 description = "Call flask decorated functions like native ones."
 homepage = "https://github.com/likianta/flask-native-stubs"
 readme = "README.md"
@@ -10,6 +10,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.8"
 flask = "*"
+# pysignal = { url = "http://likianta.pro:2006/pysignal/pysignal-0.1.2a0-py3-none-any.whl" }
 requests = "*"
 urllib3 = "*"
 

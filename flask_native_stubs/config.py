@@ -12,8 +12,8 @@ class _Config:
     running_mode: T.RunningMode = 'client'
     serialization: T.Serialization = 'json'
     
-    host: str
-    port: int
+    host: str = 'localhost'
+    port: int = 2019
 
 
 cfg = _Config()
